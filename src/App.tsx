@@ -1,63 +1,112 @@
-import React, { useState } from 'react';
-import './App.css';
-import AICodeInput from './components/AICodeInput';
-import AIDependencyGraph from './components/AIDependencyGraph';
-import { AIParseResult } from './utils/aiParser';
+import React, { useState, useCallback } from 'react';
+import { Extension, ExtensionType, Toast, TabId } from './types';
+import { MOCK_EXTENSIONS } from './mock-data';
+import Sidebar from './components/Sidebar';
+import ExtensionList from './components/ExtensionList';
+import DetailPanel from './components/DetailPanel';
+import CreateExtensionModal from './components/CreateExtensionModal';
+import ToastContainer from './components/Toast';
 
 function App() {
-  const [aiResult, setAiResult] = useState<AIParseResult | null>(null);
+  const [extensions, setExtensions] = useState<Extension[]>(MOCK_EXTENSIONS);
+  const [selectedType, setSelectedType] = useState<ExtensionType | null>('component');
+  const [selectedExtension, setSelectedExtension] = useState<Extension | null>(null);
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const handleAnalysisComplete = (result: AIParseResult) => {
-    setAiResult(result);
-  };
+  const addToast = useCallback((message: string, type: Toast['type'] = 'success') => {
+    const id = Math.random().toString(36).slice(2);
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3500);
+  }, []);
+
+  const handleSelectType = useCallback((type: ExtensionType) => {
+    setSelectedType(type);
+    setSelectedExtension(null);
+    setActiveTab('overview');
+  }, []);
+
+  const handleSelectExtension = useCallback((ext: Extension) => {
+    setSelectedExtension(ext);
+    setActiveTab('overview');
+  }, []);
+
+  const handleBack = useCallback(() => {
+    setSelectedExtension(null);
+  }, []);
+
+  const handleCreateExtension = useCallback((newExt: Extension) => {
+    setExtensions(prev => [newExt, ...prev]);
+    setSelectedType(newExt.type);
+    setSelectedExtension(newExt);
+    setIsCreateModalOpen(false);
+    addToast(`"${newExt.name}" created successfully!`, 'success');
+  }, [addToast]);
+
+  const filteredExtensions = searchQuery.trim()
+    ? extensions.filter(e =>
+        e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        e.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        e.type.includes(searchQuery.toLowerCase())
+      )
+    : selectedType
+    ? extensions.filter(e => e.type === selectedType)
+    : [];
 
   return (
-    <div className="App">
-      <header style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
-        padding: '24px',
-        textAlign: 'center',
-        marginBottom: '20px'
-      }}>
-        <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold' }}>
-          🤖 AI-Powered Velo Dependency Graph Visualizer
-        </h1>
-      </header>
+    <div className="flex h-screen overflow-hidden" style={{ background: '#1e1e1e' }}>
+      {/* Sidebar */}
+      <Sidebar
+        extensions={extensions}
+        selectedType={selectedType}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSelectType={handleSelectType}
+        onNewExtension={() => setIsCreateModalOpen(true)}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(v => !v)}
+      />
 
-      <main style={{ padding: '0 20px', maxWidth: '2400px', margin: '0 auto' }}>
-        <AICodeInput onAnalysisComplete={handleAnalysisComplete} />
-        
-        {aiResult && (
-          <div style={{
-            height: '900px',
-            border: '2px solid #e2e8f0',
-            borderRadius: '12px',
-            backgroundColor: 'white',
-            overflow: 'hidden',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-          }}>
-            <AIDependencyGraph aiResult={aiResult} />
-          </div>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {selectedExtension ? (
+          <DetailPanel
+            extension={selectedExtension}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onBack={handleBack}
+            onStatusToggle={(ext) => {
+              const updated = { ...ext, status: ext.status === 'active' ? 'inactive' as const : 'active' as const };
+              setExtensions(prev => prev.map(e => e.id === updated.id ? updated : e));
+              setSelectedExtension(updated);
+              addToast(`"${updated.name}" ${updated.status === 'active' ? 'enabled' : 'disabled'}`, 'info');
+            }}
+          />
+        ) : (
+          <ExtensionList
+            extensions={filteredExtensions}
+            selectedType={selectedType}
+            searchQuery={searchQuery}
+            onSelect={handleSelectExtension}
+          />
         )}
+      </div>
 
-        {!aiResult && (
-          <div style={{
-            padding: '40px',
-            backgroundColor: '#f7fafc',
-            borderRadius: '12px',
-            border: '2px dashed #cbd5e0',
-            textAlign: 'center',
-            marginBottom: '20px'
-          }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🤖</div>
-            <h3 style={{ margin: '0 0 12px 0', color: '#2d3748' }}>Ready for AI Analysis</h3>
-            <p style={{ margin: 0, color: '#4a5568', lineHeight: '1.6' }}>
-              Enter your OpenAI API key and Velo code above, then click "Analyze with AI" to see an intelligent dependency graph.
-            </p>
-          </div>
-        )}
-      </main>
+      {/* Create Modal */}
+      {isCreateModalOpen && (
+        <CreateExtensionModal
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreate={handleCreateExtension}
+        />
+      )}
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onDismiss={(id) => setToasts(prev => prev.filter(t => t.id !== id))} />
     </div>
   );
 }
