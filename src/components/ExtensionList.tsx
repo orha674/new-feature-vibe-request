@@ -17,14 +17,14 @@ import {
 import { Extension, ExtensionType, TYPE_META } from '../types';
 import { formatDistanceToNow } from '../utils/dateUtils';
 
-const TYPE_ICONS: Record<ExtensionType, React.ReactNode> = {
-  component: <Layers size={12} />,
-  context: <Share2 size={12} />,
-  function: <Zap size={12} />,
-  'web-method': <Server size={12} />,
-  api: <Globe size={12} />,
-  'event-handler': <Bell size={12} />,
-  'dashboard-page': <LayoutDashboard size={12} />,
+const TYPE_ICONS: Record<ExtensionType, React.ElementType> = {
+  component: Layers,
+  context: Share2,
+  function: Zap,
+  'web-method': Server,
+  api: Globe,
+  'event-handler': Bell,
+  'dashboard-page': LayoutDashboard,
 };
 
 const ALL_TYPES: ExtensionType[] = [
@@ -46,21 +46,22 @@ interface ExtensionListProps {
 }
 
 export default function ExtensionList({ extensions, onSelect, onNewExtension }: ExtensionListProps) {
-  const [selectedType, setSelectedType] = useState<ExtensionType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filtered = extensions.filter(e => {
-    const matchesType = !selectedType || e.type === selectedType;
-    const q = searchQuery.toLowerCase().trim();
-    const matchesSearch =
-      !q ||
-      e.name.toLowerCase().includes(q) ||
-      e.description.toLowerCase().includes(q) ||
-      e.type.includes(q);
-    return matchesType && matchesSearch;
-  });
+  const q = searchQuery.toLowerCase().trim();
+  const filtered = q
+    ? extensions.filter(
+        e =>
+          e.name.toLowerCase().includes(q) ||
+          e.description.toLowerCase().includes(q) ||
+          e.type.includes(q),
+      )
+    : extensions;
 
-  const countByType = (type: ExtensionType) => extensions.filter(e => e.type === type).length;
+  const groups = ALL_TYPES.map(type => ({
+    type,
+    extensions: filtered.filter(e => e.type === type),
+  })).filter(g => g.extensions.length > 0);
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -73,7 +74,6 @@ export default function ExtensionList({ extensions, onSelect, onNewExtension }: 
           Extensions
         </h1>
 
-        {/* Search */}
         <div className="relative flex-1 max-w-xs">
           <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
           <input
@@ -88,13 +88,15 @@ export default function ExtensionList({ extensions, onSelect, onNewExtension }: 
           />
         </div>
 
-        <span className="text-xs" style={{ color: '#606060' }}>
-          {filtered.length} / {extensions.length}
-        </span>
+        {q && (
+          <span className="text-xs" style={{ color: '#606060' }}>
+            {filtered.length} result{filtered.length !== 1 ? 's' : ''}
+          </span>
+        )}
 
         <button
           onClick={onNewExtension}
-          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors"
+          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium"
           style={{ background: '#0e70c0', color: '#fff' }}
           onMouseEnter={e => (e.currentTarget.style.background = '#1481cc')}
           onMouseLeave={e => (e.currentTarget.style.background = '#0e70c0')}
@@ -104,119 +106,78 @@ export default function ExtensionList({ extensions, onSelect, onNewExtension }: 
         </button>
       </div>
 
-      {/* ── Filter chips ────────────────────────────────────────────────── */}
-      <div
-        className="flex items-center gap-2 px-6 py-2.5 border-b overflow-x-auto shrink-0"
-        style={{ background: '#1e1e1e', borderColor: '#3e3e42' }}
-      >
-        <FilterChip
-          label="All"
-          count={extensions.length}
-          isActive={selectedType === null}
-          onClick={() => setSelectedType(null)}
-          color="#cccccc"
-          bgColor="rgba(204,204,204,0.12)"
-        />
-
-        <div className="w-px h-4 shrink-0" style={{ background: '#3e3e42' }} />
-
-        {ALL_TYPES.map(type => {
-          const meta = TYPE_META[type];
-          return (
-            <FilterChip
-              key={type}
-              icon={TYPE_ICONS[type]}
-              label={meta.label}
-              count={countByType(type)}
-              isActive={selectedType === type}
-              onClick={() => setSelectedType(prev => (prev === type ? null : type))}
-              color={meta.color}
-              bgColor={meta.bgColor}
-            />
-          );
-        })}
-      </div>
-
-      {/* ── Cards ───────────────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto">
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full" style={{ color: '#858585' }}>
+      {/* ── Grouped content ─────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-8">
+        {groups.length === 0 ? (
+          <div
+            className="flex flex-col items-center justify-center h-full"
+            style={{ color: '#858585' }}
+          >
             <Activity size={40} className="mb-4 opacity-40" />
             <p className="text-sm font-medium mb-1">No extensions found</p>
-            <p className="text-xs opacity-60">
-              {searchQuery ? 'Try a different search term' : 'Create your first extension to get started'}
-            </p>
+            <p className="text-xs opacity-60">Try a different search term</p>
           </div>
         ) : (
-          <div
-            className="p-6 grid gap-3"
-            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))' }}
-          >
-            {filtered.map(ext => (
-              <ExtensionCard key={ext.id} ext={ext} onSelect={onSelect} />
-            ))}
-          </div>
+          groups.map(({ type, extensions: exts }) => (
+            <TypeSection
+              key={type}
+              type={type}
+              extensions={exts}
+              onSelect={onSelect}
+            />
+          ))
         )}
       </div>
     </div>
   );
 }
 
-// ── FilterChip ────────────────────────────────────────────────────────────────
+// ── TypeSection ───────────────────────────────────────────────────────────────
 
-function FilterChip({
-  icon,
-  label,
-  count,
-  isActive,
-  onClick,
-  color,
-  bgColor,
+function TypeSection({
+  type,
+  extensions,
+  onSelect,
 }: {
-  icon?: React.ReactNode;
-  label: string;
-  count: number;
-  isActive: boolean;
-  onClick: () => void;
-  color: string;
-  bgColor: string;
+  type: ExtensionType;
+  extensions: Extension[];
+  onSelect: (e: Extension) => void;
 }) {
+  const meta = TYPE_META[type];
+  const Icon = TYPE_ICONS[type];
+
   return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap shrink-0"
-      style={{
-        background: isActive ? bgColor : 'transparent',
-        color: isActive ? color : '#858585',
-        border: `1px solid ${isActive ? color + '66' : '#3e3e42'}`,
-      }}
-      onMouseEnter={e => {
-        if (!isActive) {
-          e.currentTarget.style.color = color;
-          e.currentTarget.style.borderColor = color + '55';
-          e.currentTarget.style.background = bgColor;
-        }
-      }}
-      onMouseLeave={e => {
-        if (!isActive) {
-          e.currentTarget.style.color = '#858585';
-          e.currentTarget.style.borderColor = '#3e3e42';
-          e.currentTarget.style.background = 'transparent';
-        }
-      }}
-    >
-      {icon && <span className="opacity-80">{icon}</span>}
-      {label}
-      <span
-        className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
-        style={{
-          background: isActive ? color + '33' : '#3c3c3c',
-          color: isActive ? color : '#606060',
-        }}
+    <section>
+      {/* Section header */}
+      <div className="flex items-center gap-2 mb-3">
+        <span
+          className="flex items-center justify-center w-6 h-6 rounded"
+          style={{ background: meta.bgColor, color: meta.color }}
+        >
+          <Icon size={13} />
+        </span>
+        <h2 className="text-sm font-semibold" style={{ color: '#cccccc' }}>
+          {meta.label}s
+        </h2>
+        <span
+          className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+          style={{ background: meta.bgColor, color: meta.color }}
+        >
+          {extensions.length}
+        </span>
+        <div className="flex-1 h-px ml-1" style={{ background: '#3e3e42' }} />
+      </div>
+
+      {/* Cards */}
+      <div
+        className="grid gap-3"
+        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}
       >
-        {count}
-      </span>
-    </button>
+        {extensions.map(ext => (
+          <ExtensionCard key={ext.id} ext={ext} onSelect={onSelect} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -241,20 +202,11 @@ function ExtensionCard({ ext, onSelect }: { ext: Extension; onSelect: (e: Extens
       }}
     >
       <div className="p-4">
-        {/* Top row */}
+        {/* Name + status */}
         <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span
-              className="px-2 py-0.5 rounded text-[11px] font-semibold shrink-0 flex items-center gap-1"
-              style={{ background: meta.bgColor, color: meta.color }}
-            >
-              {TYPE_ICONS[ext.type]}
-              {meta.label}
-            </span>
-            <h3 className="text-sm font-semibold truncate" style={{ color: '#cccccc' }}>
-              {ext.name}
-            </h3>
-          </div>
+          <h3 className="text-sm font-semibold truncate" style={{ color: '#cccccc' }}>
+            {ext.name}
+          </h3>
           <span
             className="ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-medium shrink-0"
             style={{
@@ -271,7 +223,7 @@ function ExtensionCard({ ext, onSelect }: { ext: Extension; onSelect: (e: Extens
           {ext.description}
         </p>
 
-        {/* Meta */}
+        {/* Footer meta */}
         <div className="flex items-center justify-between">
           <span className="text-[11px]" style={{ color: '#606060' }}>
             Modified {formatDistanceToNow(ext.modifiedAt)}
@@ -289,7 +241,9 @@ function ExtensionCard({ ext, onSelect }: { ext: Extension; onSelect: (e: Extens
         onClick={e => e.stopPropagation()}
       >
         <QuickAction icon={<Settings size={12} />} label="Configure" onClick={() => onSelect(ext)} />
-        {canPreview && <QuickAction icon={<Eye size={12} />} label="Preview" onClick={() => onSelect(ext)} />}
+        {canPreview && (
+          <QuickAction icon={<Eye size={12} />} label="Preview" onClick={() => onSelect(ext)} />
+        )}
         <QuickAction icon={<Code size={12} />} label="Code" onClick={() => onSelect(ext)} />
       </div>
     </div>
