@@ -313,6 +313,48 @@ export const ReviewWidget: React.FC<Props> = ({ reviews, pageSize = 5 }) => {
     author: 'alice@example.com',
     createdAt: '2024-01-15T10:00:00Z',
     modifiedAt: '2024-06-30T08:00:00Z',
+    contextSchema: {
+      dataFields: [
+        {
+          name: 'items',
+          type: 'CartItem[]',
+          description: 'Ordered list of items currently in the cart, each with a productId and quantity.',
+          readonly: true,
+        },
+        {
+          name: 'itemCount',
+          type: 'number',
+          description: 'Total quantity of units across all cart lines.',
+          readonly: true,
+        },
+        {
+          name: 'subtotal',
+          type: 'number',
+          description: 'Cart subtotal in the site currency before taxes and shipping.',
+          readonly: true,
+        },
+      ],
+      actions: [
+        {
+          name: 'addToCart',
+          params: 'productId: string',
+          returns: 'void',
+          description: 'Adds one unit of a product. If the product is already in the cart its quantity is incremented.',
+        },
+        {
+          name: 'removeFromCart',
+          params: 'productId: string',
+          returns: 'void',
+          description: 'Removes the entire line for a product from the cart, regardless of quantity.',
+        },
+        {
+          name: 'clearCart',
+          params: '',
+          returns: 'void',
+          description: 'Empties the cart completely, resetting all items and totals to zero.',
+        },
+      ],
+    },
     configFields: [
       {
         id: 'persistenceStrategy',
@@ -416,6 +458,36 @@ export const useCart = () => {
     author: 'dave@example.com',
     createdAt: '2024-01-20T11:00:00Z',
     modifiedAt: '2024-04-18T13:30:00Z',
+    contextSchema: {
+      dataFields: [
+        {
+          name: 'user',
+          type: 'User | null',
+          description: 'Full profile of the currently authenticated member, or null for unauthenticated visitors.',
+          readonly: true,
+        },
+        {
+          name: 'isLoggedIn',
+          type: 'boolean',
+          description: 'True when a member session is active; use this to conditionally render gated UI.',
+          readonly: true,
+        },
+        {
+          name: 'roles',
+          type: 'string[]',
+          description: 'List of role IDs assigned to the current member, empty for guests.',
+          readonly: true,
+        },
+      ],
+      actions: [
+        {
+          name: 'hasRole',
+          params: 'roleId: string',
+          returns: 'boolean',
+          description: 'Returns true if the current member holds the given role. Always false for guests.',
+        },
+      ],
+    },
     configFields: [
       {
         id: 'guestLabel',

@@ -59,6 +59,27 @@ export interface HistoryEntry {
   diff: string;
 }
 
+// ─── Context Schema ──────────────────────────────────────────────────────────
+
+export interface ContextDataField {
+  name: string;
+  type: string;
+  description: string;
+  readonly?: boolean;
+}
+
+export interface ContextAction {
+  name: string;
+  params: string;   // e.g. "productId: string"
+  returns: string;  // e.g. "void"
+  description: string;
+}
+
+export interface ContextSchema {
+  dataFields: ContextDataField[];
+  actions: ContextAction[];
+}
+
 // ─── Extension (base + discriminated union) ─────────────────────────────────
 
 interface ExtensionBase {
@@ -81,6 +102,7 @@ export interface ComponentExtension extends ExtensionBase {
 
 export interface ContextExtension extends ExtensionBase {
   type: 'context';
+  contextSchema?: ContextSchema;
 }
 
 export interface FunctionExtension extends ExtensionBase {

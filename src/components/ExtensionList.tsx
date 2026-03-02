@@ -37,11 +37,11 @@ const ALL_TYPES: ExtensionType[] = [
   'dashboard-page',
 ];
 
-const PREVIEWABLE: ExtensionType[] = ['component', 'api', 'dashboard-page'];
+const PREVIEWABLE: ExtensionType[] = ['component', 'context', 'api', 'dashboard-page'];
 
 interface ExtensionListProps {
   extensions: Extension[];
-  onSelect: (ext: Extension) => void;
+  onSelect: (ext: Extension, tab?: string) => void;
   onNewExtension: () => void;
 }
 
@@ -141,7 +141,7 @@ function TypeSection({
 }: {
   type: ExtensionType;
   extensions: Extension[];
-  onSelect: (e: Extension) => void;
+  onSelect: (e: Extension, tab?: string) => void;
 }) {
   const meta = TYPE_META[type];
   const Icon = TYPE_ICONS[type];
@@ -183,7 +183,7 @@ function TypeSection({
 
 // ── ExtensionCard ─────────────────────────────────────────────────────────────
 
-function ExtensionCard({ ext, onSelect }: { ext: Extension; onSelect: (e: Extension) => void }) {
+function ExtensionCard({ ext, onSelect }: { ext: Extension; onSelect: (e: Extension, tab?: string) => void }) {
   const meta = TYPE_META[ext.type];
   const canPreview = PREVIEWABLE.includes(ext.type);
 
@@ -240,11 +240,11 @@ function ExtensionCard({ ext, onSelect }: { ext: Extension; onSelect: (e: Extens
         style={{ borderColor: '#3e3e42' }}
         onClick={e => e.stopPropagation()}
       >
-        <QuickAction icon={<Settings size={12} />} label="Configure" onClick={() => onSelect(ext)} />
+        <QuickAction icon={<Settings size={12} />} label="Configure" onClick={() => onSelect(ext, 'configuration')} />
         {canPreview && (
-          <QuickAction icon={<Eye size={12} />} label="Preview" onClick={() => onSelect(ext)} />
+          <QuickAction icon={<Eye size={12} />} label="Preview" onClick={() => onSelect(ext, 'preview')} />
         )}
-        <QuickAction icon={<Code size={12} />} label="Code" onClick={() => onSelect(ext)} />
+        <QuickAction icon={<Code size={12} />} label="Code" onClick={() => onSelect(ext, 'code')} />
       </div>
     </div>
   );

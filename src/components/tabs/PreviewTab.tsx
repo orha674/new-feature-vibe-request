@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Extension } from '../../types';
-import { Send, Info, ShoppingCart, Star, BarChart3 } from 'lucide-react';
+import { Extension, ContextDataField, ContextAction } from '../../types';
+import { Send, Info, ShoppingCart, Star, BarChart3, Database, Zap } from 'lucide-react';
 
 interface PreviewTabProps {
   extension: Extension;
@@ -10,6 +10,8 @@ export default function PreviewTab({ extension }: PreviewTabProps) {
   switch (extension.type) {
     case 'component':
       return <ComponentPreview extension={extension} />;
+    case 'context':
+      return <ContextPreview extension={extension} />;
     case 'api':
       return <ApiPreview extension={extension} />;
     case 'dashboard-page':
@@ -128,6 +130,147 @@ function MockComponentRender({ name }: { name: string }) {
       <div style={{ fontSize: 48, marginBottom: 12 }}>🧩</div>
       <p style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>{name}</p>
       <p style={{ fontSize: 12 }}>Component Preview</p>
+    </div>
+  );
+}
+
+// ─── Context Preview ──────────────────────────────────────────────────────────
+
+function ContextPreview({ extension }: { extension: Extension }) {
+  if (extension.type !== 'context' || !extension.contextSchema) {
+    return <NotPreviewable extension={extension} />;
+  }
+
+  const { dataFields, actions } = extension.contextSchema;
+
+  return (
+    <div className="p-6 max-w-2xl">
+      <p className="text-xs mb-5" style={{ color: '#858585' }}>
+        Bindable surface — data and actions this context exposes for editor binding
+      </p>
+
+      {/* ── Data Fields ── */}
+      {dataFields.length > 0 && (
+        <section className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Database size={13} style={{ color: '#a78bfa' }} />
+            <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#a78bfa' }}>
+              Bindable Data
+            </h3>
+            <span
+              className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+              style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa' }}
+            >
+              {dataFields.length}
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {dataFields.map(field => (
+              <DataFieldRow key={field.name} field={field} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Actions ── */}
+      {actions.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Zap size={13} style={{ color: '#fbbf24' }} />
+            <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#fbbf24' }}>
+              Bindable Actions
+            </h3>
+            <span
+              className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+              style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}
+            >
+              {actions.length}
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {actions.map(action => (
+              <ActionRow key={action.name} action={action} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {dataFields.length === 0 && actions.length === 0 && (
+        <p className="text-xs" style={{ color: '#606060' }}>No bindable surface defined for this context.</p>
+      )}
+    </div>
+  );
+}
+
+function DataFieldRow({ field }: { field: ContextDataField }) {
+  return (
+    <div
+      className="rounded-lg border px-4 py-3 flex gap-4"
+      style={{ background: '#2d2d30', borderColor: '#3e3e42' }}
+    >
+      {/* Left: name + type */}
+      <div style={{ minWidth: 180 }}>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-sm font-mono font-semibold" style={{ color: '#9cdcfe' }}>
+            {field.name}
+          </span>
+          {field.readonly && (
+            <span
+              className="px-1 py-px rounded text-[9px] font-semibold uppercase"
+              style={{ background: 'rgba(133,133,133,0.2)', color: '#606060' }}
+            >
+              readonly
+            </span>
+          )}
+        </div>
+        <span
+          className="inline-block px-1.5 py-px rounded text-[11px] font-mono"
+          style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa' }}
+        >
+          {field.type}
+        </span>
+      </div>
+
+      {/* Right: description */}
+      <p className="text-xs leading-relaxed self-center" style={{ color: '#858585' }}>
+        {field.description}
+      </p>
+    </div>
+  );
+}
+
+function ActionRow({ action }: { action: ContextAction }) {
+  const signature = action.params
+    ? `${action.name}(${action.params})`
+    : `${action.name}()`;
+
+  return (
+    <div
+      className="rounded-lg border px-4 py-3 flex gap-4"
+      style={{ background: '#2d2d30', borderColor: '#3e3e42' }}
+    >
+      {/* Left: signature + return type */}
+      <div style={{ minWidth: 180 }}>
+        <div className="mb-1">
+          <span className="text-sm font-mono font-semibold" style={{ color: '#dcdcaa' }}>
+            {signature}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-[10px]" style={{ color: '#606060' }}>returns</span>
+          <span
+            className="inline-block px-1.5 py-px rounded text-[11px] font-mono"
+            style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24' }}
+          >
+            {action.returns || 'void'}
+          </span>
+        </div>
+      </div>
+
+      {/* Right: description */}
+      <p className="text-xs leading-relaxed self-center" style={{ color: '#858585' }}>
+        {action.description}
+      </p>
     </div>
   );
 }
