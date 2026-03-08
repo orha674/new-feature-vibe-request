@@ -46,32 +46,45 @@ const ShareModal: React.FC<Props> = ({ app, onClose, onShare }) => {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.6)' }}
+      style={{ background: 'rgba(22,22,29,0.5)' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div
-        className="w-full max-w-md rounded-xl shadow-2xl overflow-hidden"
-        style={{ background: '#252526', border: '1px solid #3e3e42' }}
+        className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
+        style={{ background: '#ffffff', border: '1px solid #e5e8ef' }}
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-5 py-4 border-b"
-          style={{ borderColor: '#3e3e42' }}
+          className="flex items-center justify-between px-6 py-4 border-b"
+          style={{ borderColor: '#e5e8ef' }}
         >
           <div>
-            <h2 className="text-sm font-semibold text-[#cccccc]">Share "{app.name}"</h2>
-            <p className="text-xs text-[#858585] mt-0.5">Choose how to share this app</p>
+            <h2 className="text-base font-bold" style={{ color: '#16161d' }}>
+              Share "{app.name}"
+            </h2>
+            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>
+              Choose how to share this app
+            </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-[#3e3e42] transition-colors"
+            className="p-1.5 rounded-lg transition-colors"
+            style={{ color: '#9098a9' }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = '#f0f0f5';
+              (e.currentTarget as HTMLButtonElement).style.color = '#16161d';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+              (e.currentTarget as HTMLButtonElement).style.color = '#9098a9';
+            }}
           >
-            <X size={16} className="text-[#858585]" />
+            <X size={16} />
           </button>
         </div>
 
         {/* Options */}
-        <div className="p-5 flex flex-col gap-3">
+        <div className="p-5 flex flex-col gap-2.5">
           {SHARE_OPTIONS.map(opt => {
             const Icon = opt.icon;
             const isSelected = selectedScope === opt.scope;
@@ -79,34 +92,38 @@ const ShareModal: React.FC<Props> = ({ app, onClose, onShare }) => {
               <button
                 key={opt.scope}
                 onClick={() => setSelectedScope(opt.scope)}
-                className="flex items-start gap-3 p-3 rounded-lg text-left transition-all"
+                className="flex items-start gap-3 p-4 rounded-xl text-left transition-all"
                 style={{
-                  background: isSelected ? 'rgba(14,112,192,0.15)' : '#2d2d30',
-                  border: `1px solid ${isSelected ? '#0e70c0' : '#3e3e42'}`,
+                  background: isSelected ? '#f5f9ff' : '#fafbfc',
+                  border: `1px solid ${isSelected ? '#116dff' : '#e5e8ef'}`,
+                  boxShadow: isSelected ? '0 0 0 2px rgba(17,109,255,0.08)' : 'none',
                 }}
               >
                 <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
-                    background: isSelected ? 'rgba(14,112,192,0.25)' : '#3e3e42',
+                    background: isSelected ? '#e8f1fe' : '#f0f0f5',
                   }}
                 >
-                  <Icon size={15} style={{ color: isSelected ? '#4da6ff' : '#858585' }} />
+                  <Icon size={16} style={{ color: isSelected ? '#116dff' : '#9098a9' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-[#cccccc]">{opt.title}</span>
+                    <span className="text-sm font-semibold" style={{ color: '#16161d' }}>
+                      {opt.title}
+                    </span>
                     {isSelected && (
                       <div
-                        className="w-4 h-4 rounded-full flex items-center justify-center"
-                        style={{ background: '#0e70c0' }}
+                        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ background: '#116dff' }}
                       >
                         <div className="w-1.5 h-1.5 rounded-full bg-white" />
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-[#858585] mt-0.5">{opt.description}</p>
-
+                  <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>
+                    {opt.description}
+                  </p>
                   {opt.scope === 'site' && isSelected && (
                     <input
                       type="text"
@@ -114,13 +131,20 @@ const ShareModal: React.FC<Props> = ({ app, onClose, onShare }) => {
                       value={targetSite}
                       onChange={e => setTargetSite(e.target.value)}
                       onClick={e => e.stopPropagation()}
-                      className="mt-2 w-full px-3 py-1.5 rounded text-xs text-[#cccccc] outline-none transition-colors"
+                      className="mt-2.5 w-full px-3 py-2 rounded-lg text-xs outline-none transition-all"
                       style={{
-                        background: '#1e1e1e',
-                        border: '1px solid #3e3e42',
+                        background: '#ffffff',
+                        border: '1px solid #e5e8ef',
+                        color: '#16161d',
                       }}
-                      onFocus={e => (e.target.style.borderColor = '#0e70c0')}
-                      onBlur={e => (e.target.style.borderColor = '#3e3e42')}
+                      onFocus={e => {
+                        e.target.style.borderColor = '#116dff';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(17,109,255,0.1)';
+                      }}
+                      onBlur={e => {
+                        e.target.style.borderColor = '#e5e8ef';
+                        e.target.style.boxShadow = 'none';
+                      }}
                     />
                   )}
                 </div>
@@ -131,26 +155,33 @@ const ShareModal: React.FC<Props> = ({ app, onClose, onShare }) => {
 
         {/* Footer */}
         <div
-          className="flex items-center justify-end gap-2 px-5 py-4 border-t"
-          style={{ borderColor: '#3e3e42' }}
+          className="flex items-center justify-end gap-2 px-6 py-4 border-t"
+          style={{ borderColor: '#e5e8ef', background: '#fafbfc' }}
         >
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded text-sm text-[#858585] hover:text-[#cccccc] hover:bg-[#3e3e42] transition-colors"
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            style={{ color: '#32325d', background: '#f0f0f5' }}
+            onMouseEnter={e =>
+              ((e.currentTarget as HTMLButtonElement).style.background = '#e5e8ef')
+            }
+            onMouseLeave={e =>
+              ((e.currentTarget as HTMLButtonElement).style.background = '#f0f0f5')
+            }
           >
             Cancel
           </button>
           <button
             onClick={handleShare}
             disabled={selectedScope === 'site' && !targetSite.trim()}
-            className="px-4 py-1.5 rounded text-sm font-medium text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: '#0e70c0' }}
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: '#116dff' }}
             onMouseEnter={e => {
               if (!(selectedScope === 'site' && !targetSite.trim()))
-                (e.currentTarget as HTMLButtonElement).style.background = '#1481cc';
+                (e.currentTarget as HTMLButtonElement).style.background = '#0d5fdb';
             }}
             onMouseLeave={e =>
-              ((e.currentTarget as HTMLButtonElement).style.background = '#0e70c0')
+              ((e.currentTarget as HTMLButtonElement).style.background = '#116dff')
             }
           >
             Share

@@ -40,6 +40,7 @@ interface DetailPanelProps {
   onTabChange: (tab: TabId) => void;
   onBack: () => void;
   onStatusToggle: (ext: Extension) => void;
+  breadcrumb?: string; // e.g. "Shop Experience"
 }
 
 export default function DetailPanel({
@@ -48,26 +49,27 @@ export default function DetailPanel({
   onTabChange,
   onBack,
   onStatusToggle,
+  breadcrumb,
 }: DetailPanelProps) {
   const meta = TYPE_META[extension.type];
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden slide-in" style={{ background: '#1e1e1e' }}>
+    <div className="flex-1 flex flex-col overflow-hidden" style={{ background: '#f7f8fa' }}>
       {/* Header */}
       <div
         className="flex items-center gap-3 px-5 py-3 border-b shrink-0"
-        style={{ background: '#252526', borderColor: '#3e3e42' }}
+        style={{ background: '#ffffff', borderColor: '#e5e8ef' }}
       >
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-xs hover:text-white transition-colors"
-          style={{ color: '#858585' }}
+          className="flex items-center gap-1.5 text-xs font-medium hover:text-[#116dff] transition-colors"
+          style={{ color: '#9098a9' }}
         >
-          <ArrowLeft size={14} />
-          Back
+          <ArrowLeft size={13} />
+          {breadcrumb ?? 'Back'}
         </button>
 
-        <div className="w-px h-4 bg-gray-700" />
+        <div className="w-px h-4" style={{ background: '#e5e8ef' }} />
 
         <span style={{ color: meta.color }}>{TYPE_ICONS[extension.type]}</span>
 
@@ -78,7 +80,7 @@ export default function DetailPanel({
           {meta.label}
         </span>
 
-        <h2 className="text-sm font-semibold truncate min-w-0" style={{ color: '#cccccc' }}>
+        <h2 className="text-sm font-semibold truncate min-w-0" style={{ color: '#16161d' }}>
           {extension.name}
         </h2>
 
@@ -90,31 +92,37 @@ export default function DetailPanel({
       {/* Tabs */}
       <div
         className="flex overflow-x-auto border-b shrink-0 scrollbar-none"
-        style={{ background: '#252526', borderColor: '#3e3e42' }}
+        style={{ background: '#ffffff', borderColor: '#e5e8ef' }}
       >
         {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className="whitespace-nowrap px-3 py-2 sm:px-4 sm:py-2.5 text-xs font-medium transition-colors relative shrink-0"
+            className="whitespace-nowrap px-4 py-2.5 text-xs font-medium transition-colors shrink-0"
             style={{
-              color: activeTab === tab.id ? '#cccccc' : '#858585',
-              borderBottom: activeTab === tab.id ? '2px solid #0e70c0' : '2px solid transparent',
+              color: activeTab === tab.id ? '#116dff' : '#6b7280',
+              borderBottom: activeTab === tab.id ? '2px solid #116dff' : '2px solid transparent',
             }}
           >
             {tab.label}
             {tab.id === 'history' && (
               <span
-                className="ml-1.5 px-1 py-0.5 rounded text-[10px]"
-                style={{ background: '#3c3c3c', color: '#858585' }}
+                className="ml-1.5 px-1.5 py-px rounded-full text-[10px] font-semibold"
+                style={{
+                  background: activeTab === tab.id ? '#e8f1fe' : '#f0f0f5',
+                  color: activeTab === tab.id ? '#116dff' : '#9098a9',
+                }}
               >
                 {extension.history.length}
               </span>
             )}
             {tab.id === 'code' && (
               <span
-                className="ml-1.5 px-1 py-0.5 rounded text-[10px]"
-                style={{ background: '#3c3c3c', color: '#858585' }}
+                className="ml-1.5 px-1.5 py-px rounded-full text-[10px] font-semibold"
+                style={{
+                  background: activeTab === tab.id ? '#e8f1fe' : '#f0f0f5',
+                  color: activeTab === tab.id ? '#116dff' : '#9098a9',
+                }}
               >
                 {extension.codeFiles.length}
               </span>
@@ -140,10 +148,10 @@ export default function DetailPanel({
 function StatusBadge({ status }: { status: 'active' | 'inactive' }) {
   return (
     <span
-      className="px-2 py-0.5 rounded-full text-[11px] font-medium"
+      className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
       style={{
-        background: status === 'active' ? 'rgba(74,222,128,0.15)' : 'rgba(133,133,133,0.15)',
-        color: status === 'active' ? '#4ade80' : '#858585',
+        background: status === 'active' ? '#e6f9f4' : '#f0f0f5',
+        color: status === 'active' ? '#00b383' : '#9098a9',
       }}
     >
       {status === 'active' ? '● Active' : '○ Inactive'}
