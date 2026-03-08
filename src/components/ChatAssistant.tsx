@@ -4,7 +4,6 @@ import {
   Clock,
   MoreHorizontal,
   Plus,
-  Mic,
   AudioLines,
   Send,
   X,
@@ -12,10 +11,21 @@ import {
   LayoutGrid,
 } from 'lucide-react';
 
+interface RadioOption {
+  id: string;
+  label: string;
+}
+
+interface Widget {
+  question: string;
+  options: RadioOption[];
+}
+
 interface Message {
   id: string;
   role: 'assistant' | 'user';
   content: string;
+  widget?: Widget;
 }
 
 const SUGGESTIONS = [
@@ -35,6 +45,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -52,6 +63,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
         role: 'assistant',
         content: 'What would you like me to build for you today?',
       }]);
+      setSelectedOptions({});
     }
   }, [generateAppMode]);
 
@@ -69,25 +81,64 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
 
     // Simulate assistant response
     setTimeout(() => {
-      const reply: Message = {
-        id: Math.random().toString(36).slice(2),
-        role: 'assistant',
-        content: getReply(text.trim()),
-      };
+      const reply = getReply(text.trim());
       setMessages(prev => [...prev, reply]);
       setIsTyping(false);
     }, 1200);
   };
 
-  const getReply = (text: string): string => {
+  const getReply = (text: string): Message => {
     const lower = text.toLowerCase();
+
+    // Analytics + out-of-stock scenario
+    if (lower.includes('analytics') && (lower.includes('out-of-stock') || lower.includes('out of stock') || lower.includes('stock request'))) {
+      return {
+        id: Math.random().toString(36).slice(2),
+        role: 'assistant',
+        content: 'Great idea! I can help you build analytics for out-of-stock requests.',
+        widget: {
+          question: 'Where would you like me to add those analytics?',
+          options: [
+            {
+              id: 'existing-dashboard',
+              label: 'Add the analytics to the Back In Stock Request dashboard page',
+            },
+            {
+              id: 'new-dashboard',
+              label: 'Build a new dashboard page to show aggregated requests per product, along with last month\'s sales per product',
+            },
+          ],
+        },
+      };
+    }
+
     if (lower.includes('visitor') || lower.includes('traffic'))
-      return "To get more visitors, I'd recommend starting with SEO basics — make sure your site title, descriptions, and content include keywords your audience searches for. You can also connect Google Search Console from your Marketing tools.";
+      return {
+        id: Math.random().toString(36).slice(2),
+        role: 'assistant',
+        content: "To get more visitors, I'd recommend starting with SEO basics — make sure your site title, descriptions, and content include keywords your audience searches for. You can also connect Google Search Console from your Marketing tools.",
+      };
     if (lower.includes('analytics'))
-      return "You can set up analytics by going to Analytics in the left sidebar. I recommend connecting Google Analytics for deeper insights. Want me to walk you through it?";
+      return {
+        id: Math.random().toString(36).slice(2),
+        role: 'assistant',
+        content: "You can set up analytics by going to Analytics in the left sidebar. I recommend connecting Google Analytics for deeper insights. Want me to walk you through it?",
+      };
     if (lower.includes('offer') || lower.includes('promotion'))
-      return "A great first offer could be a limited-time discount or free shipping. Head to Marketing > Coupons to create one. Would you like help crafting the perfect offer?";
-    return "I can help you with that! Could you tell me a bit more about what you're looking for? I'm here to assist with your site design, marketing, and business growth.";
+      return {
+        id: Math.random().toString(36).slice(2),
+        role: 'assistant',
+        content: "A great first offer could be a limited-time discount or free shipping. Head to Marketing > Coupons to create one. Would you like help crafting the perfect offer?",
+      };
+    return {
+      id: Math.random().toString(36).slice(2),
+      role: 'assistant',
+      content: "I can help you with that! Could you tell me a bit more about what you're looking for? I'm here to assist with your site design, marketing, and business growth.",
+    };
+  };
+
+  const handleOptionSelect = (messageId: string, optionId: string) => {
+    setSelectedOptions(prev => ({ ...prev, [messageId]: optionId }));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -100,6 +151,89 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
   if (!isOpen) {
     return null;
   }
+
+  const renderWidget = (msg: Message) => {
+    if (!msg.widget) return null;
+    const selected = selectedOptions[msg.id];
+
+    return (
+      <div
+        className="mt-3 rounded-lg overflow-hidden"
+        style={{ border: '1px solid #e5e8ef' }}
+      >
+        <div
+          className="px-3.5 py-2.5 text-[13px] font-medium"
+          style={{ background: '#f7f8fa', color: '#1a1a2e', borderBottom: '1px solid #e5e8ef' }}
+        >
+          {msg.widget.question}
+        </div>
+        <div className="flex flex-col">
+          {msg.widget.options.map((opt) => {
+            const isSelected = selected === opt.id;
+            return (
+              <label
+                key={opt.id}
+                className="flex items-start gap-2.5 px-3.5 py-3 cursor-pointer transition-colors"
+                style={{
+                  background: isSelected ? '#f0f4ff' : '#ffffff',
+                  borderBottom: '1px solid #f0f0f5',
+                }}
+                onMouseEnter={e => {
+                  if (!isSelected) (e.currentTarget as HTMLLabelElement).style.background = '#fafbfc';
+                }}
+                onMouseLeave={e => {
+                  if (!isSelected) (e.currentTarget as HTMLLabelElement).style.background = '#ffffff';
+                }}
+              >
+                <div
+                  className="flex-shrink-0 mt-0.5 w-4 h-4 rounded-full flex items-center justify-center"
+                  style={{
+                    border: isSelected ? '2px solid #116dff' : '2px solid #c8cdd8',
+                  }}
+                >
+                  {isSelected && (
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ background: '#116dff' }}
+                    />
+                  )}
+                </div>
+                <input
+                  type="radio"
+                  name={`widget-${msg.id}`}
+                  value={opt.id}
+                  checked={isSelected}
+                  onChange={() => handleOptionSelect(msg.id, opt.id)}
+                  className="sr-only"
+                />
+                <span className="text-[12px] leading-relaxed" style={{ color: '#1a1a2e' }}>
+                  {opt.label}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+        {selected && (
+          <div className="px-3.5 py-2.5" style={{ borderTop: '1px solid #e5e8ef' }}>
+            <button
+              onClick={() => {
+                const option = msg.widget!.options.find(o => o.id === selected);
+                if (option) {
+                  sendMessage(option.label);
+                }
+              }}
+              className="w-full py-2 rounded-lg text-xs font-semibold text-white transition-colors"
+              style={{ background: '#116dff' }}
+              onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = '#0d5fdb')}
+              onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = '#116dff')}
+            >
+              Continue
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div
@@ -228,23 +362,26 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
                     <Bot size={14} color="#fff" />
                   </div>
                 )}
-                <div
-                  className="rounded-xl px-3.5 py-2.5 text-[13px] leading-relaxed max-w-[85%]"
-                  style={
-                    msg.role === 'user'
-                      ? {
-                          background: '#116dff',
-                          color: '#ffffff',
-                          borderBottomRightRadius: 4,
-                        }
-                      : {
-                          background: '#f7f8fa',
-                          color: '#1a1a2e',
-                          borderBottomLeftRadius: 4,
-                        }
-                  }
-                >
-                  {msg.content}
+                <div className="max-w-[85%]">
+                  <div
+                    className="rounded-xl px-3.5 py-2.5 text-[13px] leading-relaxed"
+                    style={
+                      msg.role === 'user'
+                        ? {
+                            background: '#116dff',
+                            color: '#ffffff',
+                            borderBottomRightRadius: 4,
+                          }
+                        : {
+                            background: '#f7f8fa',
+                            color: '#1a1a2e',
+                            borderBottomLeftRadius: 4,
+                          }
+                    }
+                  >
+                    {msg.content}
+                  </div>
+                  {msg.role === 'assistant' && renderWidget(msg)}
                 </div>
               </div>
             ))}
