@@ -65,9 +65,23 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+.shimmer-light {
+  background: linear-gradient(90deg, #e5e8ef 25%, #f0f2f5 50%, #e5e8ef 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* Fade in up animation for building steps */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up {
+  animation: fadeInUp 0.3s ease-out;
 }
 
 /* Toast animation */

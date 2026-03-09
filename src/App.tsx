@@ -10,8 +10,14 @@ import ShareModal from './components/ShareModal';
 import WixTopBar from './components/WixTopBar';
 import WixSidebar from './components/WixSidebar';
 import ChatAssistant from './components/ChatAssistant';
+import BuildingDashboardPage from './components/BuildingDashboardPage';
 
 type NavPage = 'home' | 'creations' | 'settings';
+
+export interface BuildingModeState {
+  active: boolean;
+  appName: string;
+}
 
 function App() {
   const [currentPage, setCurrentPage] = useState<NavPage>('creations');
@@ -28,6 +34,7 @@ function App() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [generateAppMode, setGenerateAppMode] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(true);
+  const [buildingMode, setBuildingMode] = useState<BuildingModeState | null>(null);
 
   // Toasts
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -42,7 +49,15 @@ function App() {
     setCurrentPage(page);
     setSelectedApp(null);
     setSelectedAsset(null);
+    setBuildingMode(null);
   };
+
+  const handleStartBuilding = useCallback((selectedOptionLabel: string) => {
+    setBuildingMode({
+      active: true,
+      appName: 'Back In Stock Analytics',
+    });
+  }, []);
 
   // ── App handlers ─────────────────────────────────────────────────────────
 
@@ -90,6 +105,11 @@ function App() {
   // ── Content renderer ──────────────────────────────────────────────────────
 
   const renderContent = () => {
+    // Building mode: show skeleton dashboard
+    if (buildingMode?.active) {
+      return <BuildingDashboardPage appName={buildingMode.appName} />;
+    }
+
     if (currentPage === 'creations') {
       // Drill level 3: extension detail (from app asset)
       if (selectedApp && selectedAsset) {
@@ -164,7 +184,7 @@ function App() {
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <WixSidebar currentPage={currentPage} onNavigate={handleNav} />
+        <WixSidebar currentPage={currentPage} onNavigate={handleNav} buildingMode={buildingMode} />
 
         {/* Main */}
         <main className="flex-1 overflow-hidden">{renderContent()}</main>
@@ -175,6 +195,8 @@ function App() {
           onClose={() => setIsChatOpen(false)}
           generateAppMode={generateAppMode}
           onExitGenerateApp={() => setGenerateAppMode(false)}
+          buildingMode={buildingMode}
+          onStartBuilding={handleStartBuilding}
         />
       </div>
 

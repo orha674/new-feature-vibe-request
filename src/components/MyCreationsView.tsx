@@ -48,7 +48,7 @@ const MyCreationsView: React.FC<Props> = ({
         <div className="flex items-start justify-between mb-5">
           <div>
             <h1 className="text-2xl font-bold" style={{ color: '#16161d' }}>
-              My Custom Apps
+              My Creations
             </h1>
             <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
               Apps and bundles you've built for your site
@@ -66,7 +66,7 @@ const MyCreationsView: React.FC<Props> = ({
             }
           >
             <Plus size={15} />
-            New App
+            New Creation
           </button>
         </div>
 

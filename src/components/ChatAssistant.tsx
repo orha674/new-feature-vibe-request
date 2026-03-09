@@ -9,7 +9,11 @@ import {
   X,
   Bot,
   LayoutGrid,
+  Sparkles,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react';
+import { BuildingModeState } from '../App';
 
 interface RadioOption {
   id: string;
@@ -34,18 +38,27 @@ const SUGGESTIONS = [
   'Plan my first offer',
 ];
 
+const BUILDING_STEPS = [
+  'Adding aggregated requests field to Out Of Stock dashboard...',
+  'Generating CMS collection for the aggregation...',
+  'Defining data schema...',
+];
+
 interface ChatAssistantProps {
   isOpen?: boolean;
   onClose?: () => void;
   generateAppMode?: boolean;
   onExitGenerateApp?: () => void;
+  buildingMode?: BuildingModeState | null;
+  onStartBuilding?: (optionLabel: string) => void;
 }
 
-const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, generateAppMode, onExitGenerateApp }) => {
+const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, generateAppMode, onExitGenerateApp, buildingMode, onStartBuilding }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [visibleSteps, setVisibleSteps] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -55,13 +68,39 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Building steps animation
+  useEffect(() => {
+    if (!buildingMode?.active) {
+      setVisibleSteps(0);
+      return;
+    }
+
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      setVisibleSteps(step);
+      if (step >= BUILDING_STEPS.length) {
+        clearInterval(interval);
+      }
+    }, 1800);
+
+    return () => clearInterval(interval);
+  }, [buildingMode?.active]);
+
+  // Scroll to bottom when building steps update
+  useEffect(() => {
+    if (visibleSteps > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [visibleSteps]);
+
   // Activate Generate App mode
   useEffect(() => {
     if (generateAppMode) {
       setMessages([{
         id: Math.random().toString(36).slice(2),
         role: 'assistant',
-        content: 'What would you like me to build for you today?',
+        content: 'What new tool would you like me to create for your site today?',
       }]);
       setSelectedOptions({});
     }
@@ -219,7 +258,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
               onClick={() => {
                 const option = msg.widget!.options.find(o => o.id === selected);
                 if (option) {
-                  sendMessage(option.label);
+                  onStartBuilding?.(option.label);
                 }
               }}
               className="w-full py-2 rounded-lg text-xs font-semibold text-white transition-colors"
@@ -227,8 +266,17 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
               onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = '#0d5fdb')}
               onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = '#116dff')}
             >
-              Continue
+              <span className="flex items-center justify-center gap-1.5">
+                <Sparkles size={13} />
+                Approve & Build
+              </span>
             </button>
+            <p
+              className="text-center mt-2 text-[10px]"
+              style={{ color: '#9098a9' }}
+            >
+              Note: this action will deduct AI credits from your account
+            </p>
           </div>
         )}
       </div>
@@ -386,7 +434,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
               </div>
             ))}
 
-            {isTyping && (
+            {isTyping && !buildingMode?.active && (
               <div className="flex items-start">
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mr-2"
@@ -406,6 +454,63 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
                 </div>
               </div>
             )}
+
+            {/* Building progress */}
+            {buildingMode?.active && (
+              <div className="flex justify-start fade-in-up">
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-0.5"
+                  style={{ background: '#1a1a2e' }}
+                >
+                  <Bot size={14} color="#fff" />
+                </div>
+                <div className="max-w-[85%]">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-[11px] font-semibold" style={{ color: '#1a1a2e' }}>Aria</span>
+                  </div>
+                  <p className="text-[13px] font-medium mb-3" style={{ color: '#1a1a2e' }}>
+                    Starting the build process for your{' '}
+                    <span style={{ color: '#116dff' }}>{buildingMode.appName}</span>...
+                  </p>
+                  <div className="flex flex-col gap-2.5">
+                    {BUILDING_STEPS.map((step, i) => {
+                      if (i >= visibleSteps) return null;
+                      const isLastVisible = i === visibleSteps - 1;
+                      const allDone = visibleSteps >= BUILDING_STEPS.length;
+                      const isComplete = !isLastVisible || allDone;
+
+                      return (
+                        <div
+                          key={i}
+                          className="flex items-start gap-2 fade-in-up"
+                          style={{ animationDelay: '0ms' }}
+                        >
+                          {isComplete ? (
+                            <CheckCircle2
+                              size={15}
+                              style={{ color: '#00b383', flexShrink: 0, marginTop: 1 }}
+                            />
+                          ) : (
+                            <Loader2
+                              size={15}
+                              className="animate-spin"
+                              style={{ color: '#116dff', flexShrink: 0, marginTop: 1 }}
+                            />
+                          )}
+                          <span
+                            className="text-[12px] leading-relaxed"
+                            style={{ color: isComplete ? '#32325d' : '#116dff' }}
+                          >
+                            {step}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
         )}
@@ -446,7 +551,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
                   }}
                 >
                   <LayoutGrid size={12} />
-                  Generate App
+                  New Creation
                   <X size={10} />
                 </button>
               )}
