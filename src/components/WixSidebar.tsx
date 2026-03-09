@@ -42,7 +42,7 @@ const TOP_ITEMS: NavItemDef[] = [
   { id: 'setup', label: 'Setup', icon: Settings2 },
   { id: 'home', label: 'Home', icon: Home, functional: true },
   { id: 'ai-agents', label: 'AI Agents', icon: Bot, badge: 'NEW', expandable: true },
-  { id: 'creations', label: 'My Custom Apps', icon: Sparkles, badge: 'NEW', functional: true },
+  { id: 'creations', label: 'My Creations', icon: Sparkles, badge: 'NEW', functional: true },
   { id: 'sales', label: 'Sales', icon: TrendingUp, expandable: true },
   { id: 'apps', label: 'Apps', icon: LayoutGrid, expandable: true },
   { id: 'site', label: 'Site & Mobile App', icon: Monitor, expandable: true },
