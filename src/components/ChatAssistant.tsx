@@ -693,89 +693,55 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
                     })}
                   </div>
                   {visibleSteps >= BUILDING_STEPS.length && buildCompleted && (
-                    <p className="text-[13px] font-medium mt-3 fade-in-up" style={{ color: '#00b383' }}>
-                      Your{' '}
-                      <span
-                        onClick={onNavigateToDashboard}
-                        className="cursor-pointer"
-                        style={{ color: '#116dff', textDecoration: 'underline', textUnderlineOffset: 2 }}
-                        onMouseEnter={e => ((e.currentTarget as HTMLSpanElement).style.color = '#0d5fdb')}
-                        onMouseLeave={e => ((e.currentTarget as HTMLSpanElement).style.color = '#116dff')}
-                      >
-                        dashboard
-                      </span>{' '}
-                      is ready!
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Next Step widget */}
-            {buildCompleted && visibleSteps >= BUILDING_STEPS.length && (
-              <div className="fade-in-up mt-1" style={{ animationDelay: '200ms' }}>
-                <div
-                  className="rounded-xl overflow-hidden"
-                  style={{
-                    background: 'linear-gradient(160deg, #fdfcfb 0%, #f7f4f0 100%)',
-                    border: '1px solid #e8e4df',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                  }}
-                >
-                  <div className="px-4 pt-3.5 pb-2">
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <Sparkles size={13} style={{ color: '#116dff' }} />
-                      <span className="text-[13px] font-semibold" style={{ color: '#1a1a2e' }}>
-                        Next Step
-                      </span>
+                    <div
+                      className="mt-3 rounded-xl overflow-hidden fade-in-up"
+                      style={{
+                        background: '#f7f8fa',
+                        border: '1px solid #e5e8ef',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                      }}
+                    >
+                      <div className="px-4 pt-4 pb-3">
+                        <p className="text-[13px] font-medium text-center" style={{ color: '#32325d' }}>
+                          Your{' '}
+                          <span
+                            onClick={onNavigateToDashboard}
+                            className="cursor-pointer"
+                            style={{ color: '#00b383' }}
+                            onMouseEnter={e => ((e.currentTarget as HTMLSpanElement).style.textDecoration = 'underline')}
+                            onMouseLeave={e => ((e.currentTarget as HTMLSpanElement).style.textDecoration = 'none')}
+                          >
+                            custom dashboard page
+                          </span>{' '}
+                          is ready!
+                        </p>
+                        <p className="text-[12px] text-center mt-2" style={{ color: '#6b7280' }}>
+                          You can continue editing it in chat and manage it in your custom creations
+                        </p>
+                      </div>
+                      <div className="px-4 pb-4">
+                        <button
+                          onClick={onGoToCreations}
+                          className="w-full py-2 rounded-lg text-[13px] font-semibold transition-colors"
+                          style={{
+                            color: '#32325d',
+                            background: '#ffffff',
+                            border: '1.5px solid #d0d5dd',
+                          }}
+                          onMouseEnter={e => {
+                            (e.currentTarget as HTMLButtonElement).style.background = '#f7f8fa';
+                            (e.currentTarget as HTMLButtonElement).style.borderColor = '#32325d';
+                          }}
+                          onMouseLeave={e => {
+                            (e.currentTarget as HTMLButtonElement).style.background = '#ffffff';
+                            (e.currentTarget as HTMLButtonElement).style.borderColor = '#d0d5dd';
+                          }}
+                        >
+                          View My Creations
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-[12px]" style={{ color: '#6b7280' }}>
-                      Would you like to keep editing?
-                    </p>
-                  </div>
-                  <div className="px-4 pb-3.5 pt-1.5 flex flex-col gap-2">
-                    <button
-                      onClick={onNavigateToDashboard}
-                      className="w-full py-2 rounded-lg text-[13px] font-semibold transition-colors"
-                      style={{
-                        color: '#116dff',
-                        background: '#ffffff',
-                        border: '1.5px solid #d0dbf0',
-                      }}
-                      onMouseEnter={e => {
-                        (e.currentTarget as HTMLButtonElement).style.background = '#f0f5ff';
-                        (e.currentTarget as HTMLButtonElement).style.borderColor = '#116dff';
-                      }}
-                      onMouseLeave={e => {
-                        (e.currentTarget as HTMLButtonElement).style.background = '#ffffff';
-                        (e.currentTarget as HTMLButtonElement).style.borderColor = '#d0dbf0';
-                      }}
-                    >
-                      Keep Editing
-                    </button>
-                    <p className="text-[12px]" style={{ color: '#6b7280' }}>
-                      You can manage and edit this dashboard anytime from the My Creations page.
-                    </p>
-                    <button
-                      onClick={onGoToCreations}
-                      className="w-full py-2 rounded-lg text-[13px] font-semibold transition-colors"
-                      style={{
-                        color: '#116dff',
-                        background: '#ffffff',
-                        border: '1.5px solid #d0dbf0',
-                      }}
-                      onMouseEnter={e => {
-                        (e.currentTarget as HTMLButtonElement).style.background = '#f0f5ff';
-                        (e.currentTarget as HTMLButtonElement).style.borderColor = '#116dff';
-                      }}
-                      onMouseLeave={e => {
-                        (e.currentTarget as HTMLButtonElement).style.background = '#ffffff';
-                        (e.currentTarget as HTMLButtonElement).style.borderColor = '#d0dbf0';
-                      }}
-                    >
-                      Go to My Creations
-                    </button>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
