@@ -745,28 +745,28 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
                     >
                       Keep Editing
                     </button>
+                    <p className="text-[11px] text-center" style={{ color: '#9098a9' }}>
+                      You can manage and edit this dashboard anytime from the My Creations page.
+                    </p>
                     <button
                       onClick={onGoToCreations}
                       className="w-full py-2 rounded-lg text-[13px] font-semibold transition-colors"
                       style={{
-                        color: '#6b7280',
+                        color: '#116dff',
                         background: '#ffffff',
-                        border: '1.5px solid #e5e8ef',
+                        border: '1.5px solid #d0dbf0',
                       }}
                       onMouseEnter={e => {
-                        (e.currentTarget as HTMLButtonElement).style.background = '#f7f8fa';
-                        (e.currentTarget as HTMLButtonElement).style.borderColor = '#9098a9';
+                        (e.currentTarget as HTMLButtonElement).style.background = '#f0f5ff';
+                        (e.currentTarget as HTMLButtonElement).style.borderColor = '#116dff';
                       }}
                       onMouseLeave={e => {
                         (e.currentTarget as HTMLButtonElement).style.background = '#ffffff';
-                        (e.currentTarget as HTMLButtonElement).style.borderColor = '#e5e8ef';
+                        (e.currentTarget as HTMLButtonElement).style.borderColor = '#d0dbf0';
                       }}
                     >
                       Go to My Creations
                     </button>
-                    <p className="text-[11px] text-center" style={{ color: '#9098a9' }}>
-                      You can manage and edit this dashboard anytime from the My Creations page.
-                    </p>
                   </div>
                 </div>
               </div>
