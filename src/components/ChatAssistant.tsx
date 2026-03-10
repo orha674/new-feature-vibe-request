@@ -707,9 +707,9 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
                           <span
                             onClick={onNavigateToDashboard}
                             className="cursor-pointer"
-                            style={{ color: '#00b383' }}
-                            onMouseEnter={e => ((e.currentTarget as HTMLSpanElement).style.textDecoration = 'underline')}
-                            onMouseLeave={e => ((e.currentTarget as HTMLSpanElement).style.textDecoration = 'none')}
+                            style={{ color: '#00b383', textDecoration: 'underline', textUnderlineOffset: 2 }}
+                            onMouseEnter={e => ((e.currentTarget as HTMLSpanElement).style.opacity = '0.8')}
+                            onMouseLeave={e => ((e.currentTarget as HTMLSpanElement).style.opacity = '1')}
                           >
                             custom dashboard page
                           </span>{' '}
