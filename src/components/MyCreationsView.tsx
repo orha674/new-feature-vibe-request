@@ -53,7 +53,7 @@ const MyCreationsView: React.FC<Props> = ({
               My Creations
             </h1>
             <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
-              Apps and bundles you've built for your site
+              Custom tools you've built for your site
             </p>
           </div>
           <button
@@ -82,7 +82,7 @@ const MyCreationsView: React.FC<Props> = ({
             />
             <input
               type="text"
-              placeholder="Search apps…"
+              placeholder="Search Creation…"
               value={query}
               onChange={e => setQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 rounded-lg text-sm outline-none transition-colors"

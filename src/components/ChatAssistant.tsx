@@ -766,7 +766,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={generateAppMode ? 'Describe your app...' : editAppMode ? `Describe changes to ${editAppMode}...` : 'Ask me anything'}
+            placeholder={generateAppMode ? 'Describe your need...' : editAppMode ? `Describe changes to ${editAppMode}...` : 'Ask me anything'}
             className="flex-1 text-sm outline-none bg-transparent"
             style={{ color: '#1a1a2e' }}
           />
