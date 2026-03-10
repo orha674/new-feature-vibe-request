@@ -745,7 +745,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
                     >
                       Keep Editing
                     </button>
-                    <p className="text-[11px] text-center" style={{ color: '#9098a9' }}>
+                    <p className="text-[12px]" style={{ color: '#6b7280' }}>
                       You can manage and edit this dashboard anytime from the My Creations page.
                     </p>
                     <button
