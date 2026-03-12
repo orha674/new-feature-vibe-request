@@ -78,6 +78,7 @@ const TOP_ITEMS: NavItemDef[] = [
   { id: 'setup', label: 'Setup', icon: Settings2 },
   { id: 'home', label: 'Home', icon: Home, functional: true },
   { id: 'ai-agents', label: 'AI Agents', icon: Sparkles, badge: 'NEW', badgeColor: '#f5a623', expandable: true },
+  { id: 'creations', label: 'Custom Creations', icon: Package, badge: 'NEW', badgeColor: '#116dff', functional: true },
   { id: 'booking-cal', label: 'Booking Calendar', icon: Calendar, expandable: true },
   { id: 'sales', label: 'Sales', icon: TrendingUp, expandable: true },
   { id: 'catalog', label: 'Catalog', icon: Globe, expandable: true },
@@ -93,13 +94,6 @@ const MIDDLE_ITEMS: NavItemDef[] = [
   { id: 'analytics', label: 'Analytics', icon: BarChart2, expandable: true },
   { id: 'automations', label: 'Automations', icon: Zap, expandable: true },
 ];
-
-const CREATIONS_ITEM: NavItemDef = {
-  id: 'creations',
-  label: 'Custom Creations',
-  icon: Package,
-  functional: true,
-};
 
 const BOTTOM_ITEMS: NavItemDef[] = [
   { id: 'settings', label: 'Settings', icon: Settings, functional: true },
@@ -333,11 +327,6 @@ const WixSidebar: React.FC<Props> = ({ currentPage, onNavigate }) => {
         <div className="my-1.5 mx-2" style={{ borderTop: '1px solid #2a2a36' }} />
 
         {MIDDLE_ITEMS.map(renderItem)}
-
-        {/* Divider */}
-        <div className="my-1.5 mx-2" style={{ borderTop: '1px solid #2a2a36' }} />
-
-        {renderItem(CREATIONS_ITEM)}
       </nav>
 
       {/* Bottom: Settings */}
