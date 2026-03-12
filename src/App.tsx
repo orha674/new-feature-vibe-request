@@ -12,8 +12,13 @@ import WixSidebar from './components/WixSidebar';
 import ChatAssistant from './components/ChatAssistant';
 import BuildingDashboardPage from './components/BuildingDashboardPage';
 import HomePage from './components/HomePage';
+import { UpsellChatProvider, useUpsellChat } from './components/upsell/UpsellChatContext';
+import { UpsellChatPanel } from './components/upsell/UpsellChatPanel';
+import { UpsellBuildView } from './components/upsell/UpsellBuildView';
+import { UpsellRulesView } from './components/upsell/UpsellRulesView';
+import { UpsellPreviewPage } from './components/upsell/UpsellPreviewPage';
 
-type NavPage = 'home' | 'creations' | 'settings';
+type NavPage = 'home' | 'creations' | 'settings' | 'upsell-build' | 'upsell-rules';
 
 export interface BuildingModeState {
   active: boolean;
@@ -22,7 +27,7 @@ export interface BuildingModeState {
   freshlyBuilt: boolean;
 }
 
-function App() {
+function AppInner() {
   const [currentPage, setCurrentPage] = useState<NavPage>('creations');
 
   // Extensions state
@@ -45,18 +50,23 @@ function App() {
   // Toasts
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  // Upsell chat
+  const { isUpsellPanelOpen, setIsUpsellPanelOpen } = useUpsellChat();
+
   const addToast = useCallback((message: string, type: Toast['type'] = 'success') => {
     const id = Math.random().toString(36).slice(2);
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
   }, []);
 
-  const handleNav = (page: NavPage) => {
-    setCurrentPage(page);
+  const handleNav = (page: string) => {
+    setCurrentPage(page as NavPage);
     setSelectedApp(null);
     setSelectedAsset(null);
     setBuildingMode(null);
   };
+
+  // ── ChatAssistant build handlers ──────────────────────────────────────────
 
   const handleStartBuilding = useCallback((selectedOptionLabel: string) => {
     setBuildingMode({
@@ -67,7 +77,7 @@ function App() {
     });
   }, []);
 
-  const handleBuildComplete = useCallback(() => {
+  const handleChatBuildComplete = useCallback(() => {
     setBuildingMode(prev => prev ? { ...prev, completed: true, freshlyBuilt: true } : prev);
 
     // Add the new creation to My Creations (only if not already there)
@@ -131,6 +141,16 @@ function App() {
     setIsChatOpen(true);
   }, []);
 
+  // ── Upsell flow handlers ────────────────────────────────────────────────
+
+  const handleUpsellNavigate = useCallback((page: string) => {
+    setCurrentPage(page as NavPage);
+  }, []);
+
+  const handleUpsellBuildComplete = useCallback(() => {
+    setCurrentPage('upsell-rules');
+  }, []);
+
   // ── App handlers ─────────────────────────────────────────────────────────
 
   const handleRollback = useCallback(
@@ -177,9 +197,23 @@ function App() {
   // ── Content renderer ──────────────────────────────────────────────────────
 
   const renderContent = () => {
-    // Building mode: show skeleton dashboard
+    // Building mode: show skeleton dashboard (from ChatAssistant flow)
     if (buildingMode?.active) {
       return <BuildingDashboardPage appName={buildingMode.appName} completed={buildingMode.completed} freshlyBuilt={buildingMode.freshlyBuilt} />;
+    }
+
+    // Upsell flow pages
+    if (currentPage === 'upsell-build') {
+      return (
+        <UpsellBuildView
+          onBack={() => setCurrentPage('creations')}
+          onBuildComplete={handleUpsellBuildComplete}
+        />
+      );
+    }
+
+    if (currentPage === 'upsell-rules') {
+      return <UpsellRulesView onBack={() => setCurrentPage('creations')} />;
     }
 
     if (currentPage === 'creations') {
@@ -258,7 +292,11 @@ function App() {
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#f7f8fa' }}>
       {/* Top bar */}
-      <WixTopBar onToggleChat={() => setIsChatOpen(prev => !prev)} />
+      <WixTopBar
+        onToggleChat={() => setIsChatOpen(prev => !prev)}
+        onAIClick={() => setIsUpsellPanelOpen(!isUpsellPanelOpen)}
+        isAIPanelOpen={isUpsellPanelOpen}
+      />
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
@@ -268,7 +306,7 @@ function App() {
         {/* Main */}
         <main className="flex-1 overflow-hidden">{renderContent()}</main>
 
-        {/* Chat Assistant */}
+        {/* Chat Assistant (ChatAssistant flow) */}
         <ChatAssistant
           isOpen={isChatOpen}
           onClose={() => setIsChatOpen(false)}
@@ -279,13 +317,18 @@ function App() {
           onExitEditApp={() => setEditAppMode(null)}
           buildingMode={buildingMode}
           onStartBuilding={handleStartBuilding}
-          onBuildComplete={handleBuildComplete}
+          onBuildComplete={handleChatBuildComplete}
           onNavigateToDashboard={handleNavigateToDashboard}
           onGoToCreations={() => handleNav('creations')}
           onShowEmptyCreations={handleShowEmptyCreations}
           prefillInput={prefillChatInput}
           onPrefillConsumed={() => setPrefillChatInput('')}
         />
+
+        {/* AI Chat Panel (Upsell flow) */}
+        {isUpsellPanelOpen && (
+          <UpsellChatPanel onNavigate={handleUpsellNavigate} />
+        )}
       </div>
 
       {/* Modals */}
@@ -308,6 +351,19 @@ function App() {
         onDismiss={id => setToasts(prev => prev.filter(t => t.id !== id))}
       />
     </div>
+  );
+}
+
+function App() {
+  // If opened with ?preview=cart, render the fullscreen preview page
+  if (new URLSearchParams(window.location.search).get('preview') === 'cart') {
+    return <UpsellPreviewPage />;
+  }
+
+  return (
+    <UpsellChatProvider>
+      <AppInner />
+    </UpsellChatProvider>
   );
 }
 

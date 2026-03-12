@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Settings2,
   Home,
-  Bot,
   Sparkles,
   TrendingUp,
   LayoutGrid,
@@ -19,43 +18,76 @@ import {
   ChevronDown,
   ChevronRight as ChevronRightSm,
   Package,
+  Calendar,
+  Globe,
+  Pencil,
   Star,
+  ShoppingBag,
+  Layers,
+  Tag,
+  Bell as BellIcon,
+  Search as SearchIcon,
+  Gift,
+  Percent,
+  Share2,
+  BookOpen,
 } from 'lucide-react';
 import { BuildingModeState } from '../App';
 
-type NavPage = 'home' | 'creations' | 'settings';
-
-interface NavSubItem {
-  id: string;
-  label: string;
-  active?: boolean;
-  children?: NavSubItem[];
-}
-
 interface Props {
-  currentPage: NavPage;
-  onNavigate: (page: NavPage) => void;
+  currentPage: string;
+  onNavigate: (page: string) => void;
   buildingMode?: BuildingModeState | null;
 }
 
+interface SubItem {
+  id: string;
+  label: string;
+  functional?: boolean;
+  expandable?: boolean;
+}
+
 interface NavItemDef {
-  id: NavPage | string;
+  id: string;
   label: string;
   icon: React.ElementType;
   badge?: string;
+  badgeColor?: string;
   expandable?: boolean;
-  active?: boolean;
   functional?: boolean;
-  subItems?: NavSubItem[];
+  dividerAfter?: boolean;
+  subItems?: SubItem[];
 }
+
+const CATALOG_SUB_ITEMS: SubItem[] = [
+  { id: 'products', label: 'Products' },
+  { id: 'inventory', label: 'Inventory' },
+  { id: 'categories', label: 'Categories' },
+  { id: 'back-in-stock', label: 'Back in Stock Requests' },
+  { id: 'find-products', label: 'Find Products to Sell' },
+];
+
+const CATALOG_EXTRA: SubItem[] = [
+  { id: 'booking-services', label: 'Booking Services' },
+  { id: 'gift-cards', label: 'Gift Cards' },
+  { id: 'discounts', label: 'Discounts', expandable: true },
+  { id: 'sales-channels', label: 'Sales Channels', expandable: true },
+  { id: 'booking-channels', label: 'Booking Channels', expandable: true },
+  { id: 'upsell-rules', label: 'Product Suggestions', functional: true },
+];
 
 const TOP_ITEMS: NavItemDef[] = [
   { id: 'setup', label: 'Setup', icon: Settings2 },
   { id: 'home', label: 'Home', icon: Home, functional: true },
-  { id: 'ai-agents', label: 'AI Agents', icon: Bot, badge: 'NEW', expandable: true },
-  { id: 'creations', label: 'My Creations', icon: Sparkles, badge: 'NEW', functional: true },
+  { id: 'ai-agents', label: 'AI Agents', icon: Sparkles, badge: 'NEW', badgeColor: '#f5a623', expandable: true },
+  { id: 'creations', label: 'Custom Creations', icon: Package, badge: 'NEW', badgeColor: '#116dff', functional: true },
+  { id: 'booking-cal', label: 'Booking Calendar', icon: Calendar, expandable: true },
   { id: 'sales', label: 'Sales', icon: TrendingUp, expandable: true },
+  { id: 'catalog', label: 'Catalog', icon: Globe, expandable: true },
   { id: 'apps', label: 'Apps', icon: LayoutGrid, expandable: true },
+];
+
+const MIDDLE_ITEMS: NavItemDef[] = [
   { id: 'site', label: 'Site & Mobile App', icon: Monitor, expandable: true },
   { id: 'marketing', label: 'Marketing', icon: Megaphone, expandable: true },
   { id: 'getting-paid', label: 'Getting Paid', icon: CreditCard, expandable: true },
@@ -69,140 +101,34 @@ const BOTTOM_ITEMS: NavItemDef[] = [
   { id: 'settings', label: 'Settings', icon: Settings, functional: true },
 ];
 
-const CATALOG_SUB_ITEMS: NavSubItem[] = [
-  {
-    id: 'store-products',
-    label: 'Store Products',
-    children: [
-      { id: 'products', label: 'Products' },
-      { id: 'inventory', label: 'Inventory' },
-      { id: 'categories', label: 'Categories' },
-      { id: 'back-in-stock', label: 'Back in Stock Requests', active: true },
-    ],
-  },
-  { id: 'find-products', label: 'Find Products to Sell' },
-  { id: 'booking-services', label: 'Booking Services' },
-  { id: 'pricing-plans', label: 'Pricing Plans' },
-  { id: 'gift-cards', label: 'Gift Cards' },
-  { id: 'discounts', label: 'Discounts' },
-  { id: 'sales-channels', label: 'Sales Channels' },
-];
-
 const WixSidebar: React.FC<Props> = ({ currentPage, onNavigate, buildingMode }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [storeProductsOpen, setStoreProductsOpen] = useState(false);
 
-  // Auto-expand catalog items when building mode activates
+  // Auto-expand catalog tree when building mode is active or on upsell-rules page
   useEffect(() => {
-    if (buildingMode?.active) {
-      setExpandedItems(new Set(['catalog', 'store-products']));
-    } else {
-      setExpandedItems(new Set());
+    if (buildingMode?.active || currentPage === 'upsell-rules') {
+      setCatalogOpen(true);
+      setStoreProductsOpen(true);
     }
-  }, [buildingMode?.active]);
-
-  const toggleExpanded = (id: string) => {
-    setExpandedItems(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  // Build the navigation items, injecting Catalog when in building mode
-  const getNavigationItems = (): NavItemDef[] => {
-    if (!buildingMode?.active) return TOP_ITEMS;
-
-    const items: NavItemDef[] = [];
-    for (const item of TOP_ITEMS) {
-      items.push(item);
-      // Insert Catalog right after Sales
-      if (item.id === 'sales') {
-        items.push({
-          id: 'catalog',
-          label: 'Catalog',
-          icon: Package,
-          expandable: true,
-          subItems: CATALOG_SUB_ITEMS,
-        });
-      }
-    }
-    return items;
-  };
-
-  const renderSubItems = (subItems: NavSubItem[], depth: number = 0) => {
-    return subItems.map(sub => {
-      const hasChildren = sub.children && sub.children.length > 0;
-      const isExpanded = expandedItems.has(sub.id);
-      const paddingLeft = 16 + depth * 16;
-
-      return (
-        <React.Fragment key={sub.id}>
-          <button
-            onClick={() => hasChildren && toggleExpanded(sub.id)}
-            className="flex items-center w-full py-1.5 rounded-md transition-all text-left"
-            style={{
-              paddingLeft,
-              paddingRight: 10,
-              gap: 8,
-              color: sub.active ? '#ffffff' : '#9fa0b0',
-              background: sub.active ? 'rgba(17, 109, 255, 0.15)' : 'transparent',
-              cursor: hasChildren ? 'pointer' : 'default',
-              borderLeft: sub.active ? '2px solid #116dff' : '2px solid transparent',
-            }}
-            onMouseEnter={e => {
-              if (!sub.active)
-                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)';
-            }}
-            onMouseLeave={e => {
-              if (!sub.active)
-                (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
-            }}
-          >
-            <span
-              className="text-[12px] flex-1 truncate"
-              style={{
-                color: sub.active ? '#ffffff' : '#9fa0b0',
-                fontWeight: sub.active ? 500 : 400,
-              }}
-            >
-              {sub.label}
-            </span>
-            {sub.active && (
-              <Star size={11} style={{ color: '#6b6c7e', flexShrink: 0 }} />
-            )}
-            {hasChildren && (
-              isExpanded
-                ? <ChevronDown size={11} style={{ color: '#6b6c7e', flexShrink: 0 }} />
-                : <ChevronRightSm size={11} style={{ color: '#6b6c7e', flexShrink: 0 }} />
-            )}
-          </button>
-          {hasChildren && isExpanded && renderSubItems(sub.children!, depth + 1)}
-        </React.Fragment>
-      );
-    });
-  };
+  }, [buildingMode?.active, currentPage]);
 
   const renderItem = (item: NavItemDef) => {
     const Icon = item.icon;
-    const isActive = item.id === currentPage;
-    const isClickable = item.functional || false;
-    const hasSubItems = item.subItems && item.subItems.length > 0;
-    const isExpanded = expandedItems.has(item.id as string);
-    const isCatalogInBuildMode = buildingMode?.active && item.id === 'catalog';
+    const isCatalog = item.id === 'catalog';
+    const isActive = item.id === currentPage || (isCatalog && currentPage === 'upsell-rules');
+    const isCatalogInBuildMode = buildingMode?.active && isCatalog;
+    const isClickable = item.functional || isCatalog;
 
     return (
       <React.Fragment key={item.id}>
         <button
           onClick={() => {
-            if (hasSubItems) {
-              toggleExpanded(item.id as string);
-            } else if (isClickable) {
-              onNavigate(item.id as NavPage);
+            if (isCatalog) {
+              setCatalogOpen(v => !v);
+            } else if (item.functional) {
+              onNavigate(item.id);
             }
           }}
           title={collapsed ? item.label : undefined}
@@ -211,15 +137,15 @@ const WixSidebar: React.FC<Props> = ({ currentPage, onNavigate, buildingMode }) 
             gap: collapsed ? 0 : 9,
             justifyContent: collapsed ? 'center' : 'flex-start',
             color: isActive || isCatalogInBuildMode ? '#ffffff' : '#9fa0b0',
-            background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
-            cursor: isClickable || hasSubItems ? 'pointer' : 'default',
+            background: isActive && !isCatalog ? 'rgba(255,255,255,0.12)' : 'transparent',
+            cursor: isClickable ? 'pointer' : 'default',
           }}
           onMouseEnter={e => {
-            if (!isActive)
+            if (!isActive || isCatalog)
               (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)';
           }}
           onMouseLeave={e => {
-            if (!isActive)
+            if (!isActive || isCatalog)
               (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
           }}
         >
@@ -231,34 +157,103 @@ const WixSidebar: React.FC<Props> = ({ currentPage, onNavigate, buildingMode }) 
                 {item.badge && (
                   <span
                     className="text-[10px] font-bold px-1.5 py-px rounded-full"
-                    style={{ background: '#116dff', color: '#fff' }}
+                    style={{ background: item.badgeColor || '#116dff', color: '#fff' }}
                   >
                     {item.badge}
                   </span>
                 )}
-                {item.expandable && !hasSubItems && (
+                {item.expandable && !isCatalog && (
                   <ChevronRightSm size={12} style={{ color: '#6b6c7e', flexShrink: 0 }} />
                 )}
-                {hasSubItems && (
-                  isExpanded
-                    ? <ChevronDown size={12} style={{ color: '#6b6c7e', flexShrink: 0 }} />
-                    : <ChevronRightSm size={12} style={{ color: '#6b6c7e', flexShrink: 0 }} />
+                {isCatalog && (
+                  <ChevronDown
+                    size={12}
+                    style={{
+                      color: '#6b6c7e',
+                      flexShrink: 0,
+                      transform: catalogOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+                      transition: 'transform 0.15s ease',
+                    }}
+                  />
                 )}
               </div>
             </>
           )}
         </button>
-        {/* Render sub-items if expanded and not collapsed */}
-        {!collapsed && hasSubItems && isExpanded && (
-          <div className="flex flex-col gap-0.5 ml-1">
-            {renderSubItems(item.subItems!)}
+
+        {/* Catalog sub-tree */}
+        {isCatalog && catalogOpen && !collapsed && (
+          <div className="ml-3 pl-3 border-l" style={{ borderColor: '#2a2a36' }}>
+            {/* Store Products group */}
+            <button
+              onClick={() => setStoreProductsOpen(v => !v)}
+              className="flex items-center w-full px-2 py-1.5 rounded text-left transition-colors"
+              style={{ color: '#9fa0b0' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              <span className="text-[13px] flex-1 truncate">Store Products</span>
+              <ChevronDown
+                size={11}
+                style={{
+                  color: '#6b6c7e',
+                  transform: storeProductsOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+                  transition: 'transform 0.15s ease',
+                }}
+              />
+            </button>
+            {storeProductsOpen && (
+              <div className="ml-2.5 pl-2.5 border-l" style={{ borderColor: '#2a2a36' }}>
+                {CATALOG_SUB_ITEMS.map(sub => (
+                  <button
+                    key={sub.id}
+                    className="flex items-center w-full px-2 py-1.5 rounded text-left transition-colors text-[13px]"
+                    style={{
+                      color: currentPage === sub.id ? '#ffffff' : '#9fa0b0',
+                      background: currentPage === sub.id ? 'rgba(255,255,255,0.12)' : 'transparent',
+                    }}
+                    onMouseEnter={e => {
+                      if (currentPage !== sub.id) e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                    }}
+                    onMouseLeave={e => {
+                      if (currentPage !== sub.id) e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Extra catalog items */}
+            {CATALOG_EXTRA.map(sub => (
+              <button
+                key={sub.id}
+                onClick={() => sub.functional && onNavigate(sub.id)}
+                className="flex items-center w-full px-2 py-1.5 rounded text-left transition-colors text-[13px]"
+                style={{
+                  color: currentPage === sub.id ? '#ffffff' : '#9fa0b0',
+                  background: currentPage === sub.id ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  cursor: sub.functional ? 'pointer' : 'default',
+                }}
+                onMouseEnter={e => {
+                  if (currentPage !== sub.id) e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                }}
+                onMouseLeave={e => {
+                  if (currentPage !== sub.id) e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                <span className="flex-1 truncate">{sub.label}</span>
+                {sub.expandable && (
+                  <ChevronRightSm size={10} style={{ color: '#6b6c7e', flexShrink: 0 }} />
+                )}
+              </button>
+            ))}
           </div>
         )}
       </React.Fragment>
     );
   };
-
-  const navItems = getNavigationItems();
 
   return (
     <aside
@@ -275,31 +270,32 @@ const WixSidebar: React.FC<Props> = ({ currentPage, onNavigate, buildingMode }) 
         style={{ borderColor: '#2a2a36' }}
       >
         {!collapsed && (
-          <button
-            className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white transition-colors truncate"
-            style={{ background: 'rgba(255,255,255,0.08)' }}
-            onMouseEnter={e =>
-              ((e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.12)')
-            }
-            onMouseLeave={e =>
-              ((e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)')
-            }
-          >
-            <Package size={13} />
-            <span className="truncate">Quick Actions</span>
-            <ChevronDown size={12} style={{ color: '#9098a9', flexShrink: 0 }} />
-          </button>
+          <>
+            <button
+              className="p-2 rounded-lg transition-colors flex-shrink-0"
+              style={{ color: '#9fa0b0' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              <Star size={14} />
+            </button>
+            <button
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white transition-colors truncate"
+              style={{ background: 'rgba(255,255,255,0.08)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.12)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+            >
+              <span className="truncate">Quick Actions</span>
+              <ChevronDown size={12} style={{ color: '#9098a9', flexShrink: 0 }} />
+            </button>
+          </>
         )}
         <button
           onClick={() => setCollapsed(v => !v)}
           className="p-1.5 rounded-lg transition-colors flex-shrink-0"
           style={{ color: '#6b6c7e' }}
-          onMouseEnter={e =>
-            ((e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)')
-          }
-          onMouseLeave={e =>
-            ((e.currentTarget as HTMLButtonElement).style.background = 'transparent')
-          }
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >
           {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
@@ -310,12 +306,8 @@ const WixSidebar: React.FC<Props> = ({ currentPage, onNavigate, buildingMode }) 
         <div
           className="mx-2.5 my-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors"
           style={{ background: 'rgba(255,255,255,0.06)' }}
-          onMouseEnter={e =>
-            ((e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.09)')
-          }
-          onMouseLeave={e =>
-            ((e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.06)')
-          }
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.09)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
         >
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-medium text-white">Let's set up your business</span>
@@ -332,12 +324,30 @@ const WixSidebar: React.FC<Props> = ({ currentPage, onNavigate, buildingMode }) 
 
       {/* Nav items */}
       <nav className="flex-1 overflow-y-auto px-1.5 py-1 flex flex-col gap-0.5">
-        {navItems.map(item => renderItem(item))}
+        {TOP_ITEMS.map(renderItem)}
+
+        {/* Divider */}
+        <div className="my-1.5 mx-2" style={{ borderTop: '1px solid #2a2a36' }} />
+
+        {MIDDLE_ITEMS.map(renderItem)}
       </nav>
 
-      {/* Bottom items */}
-      <div className="px-1.5 py-2 border-t flex flex-col gap-0.5" style={{ borderColor: '#2a2a36' }}>
+      {/* Bottom: Settings */}
+      <div className="px-1.5 py-1.5 border-t flex flex-col gap-0.5" style={{ borderColor: '#2a2a36' }}>
         {BOTTOM_ITEMS.map(renderItem)}
+      </div>
+
+      {/* Edit Site */}
+      <div className="px-1.5 pb-3 pt-1 border-t" style={{ borderColor: '#2a2a36' }}>
+        <button
+          className="flex items-center justify-center w-full gap-2 py-2 rounded-lg text-sm font-medium transition-colors"
+          style={{ color: '#ffffff' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          <Pencil size={13} />
+          {!collapsed && <span>Edit Site</span>}
+        </button>
       </div>
     </aside>
   );
