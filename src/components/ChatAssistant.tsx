@@ -661,7 +661,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
                   {msg.role === 'assistant' && renderAppMarketWidget(msg)}
                   {msg.role === 'assistant' && msg.showUpsellCards && (
                     <div className="mt-3">
-                      <UpsellAppCards onCreateWithAI={() => onNavigateToUpsellBuild?.()} />
+                      <UpsellAppCards onCreateWithAI={() => onStartBuilding?.('Create upsell capability with AI', 'Smart Product Bundles')} />
                     </div>
                   )}
                 </div>
@@ -742,56 +742,110 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
                     })}
                   </div>
                   {visibleSteps >= buildingSteps.length && buildCompleted && (
-                    <div
-                      className="mt-3 rounded-xl overflow-hidden fade-in-up"
-                      style={{
-                        background: '#f7f8fa',
-                        border: '1px solid #e5e8ef',
-                      }}
-                    >
-                      <div className="px-3.5 py-3">
-                        <p className="text-[13px] font-medium text-center" style={{ color: '#32325d' }}>
-                          Your{' '}
-                          <span
-                            onClick={onNavigateToDashboard}
-                            className="cursor-pointer"
-                            style={{ color: '#00b383', textDecoration: 'underline', textUnderlineOffset: 2 }}
-                            onMouseEnter={e => ((e.currentTarget as HTMLSpanElement).style.opacity = '0.8')}
-                            onMouseLeave={e => ((e.currentTarget as HTMLSpanElement).style.opacity = '1')}
-                          >
-                            custom dashboard page
-                          </span>{' '}
-                          is ready!
+                    buildAppName === 'Smart Product Bundles' ? (
+                      /* ── Upsell completion widget ── */
+                      <div className="mt-3 flex flex-col gap-2 fade-in-up">
+                        <p className="text-[13px] font-medium" style={{ color: '#32325d' }}>
+                          All done! Your Product Suggestion App is now live and ready to use.
                         </p>
-                        <p className="text-[11px] text-center mt-1" style={{ color: '#6b7280' }}>
-                          You can continue editing it in chat and manage it in your custom creations
-                        </p>
-                      </div>
-                      <div
-                        className="px-3.5 py-2"
-                        style={{ borderTop: '1px solid #e5e8ef', background: '#ffffff' }}
-                      >
-                        <button
-                          onClick={onGoToCreations}
-                          className="w-full py-1.5 rounded-lg text-[12px] font-semibold transition-colors"
-                          style={{
-                            color: '#32325d',
-                            background: '#ffffff',
-                            border: '1.5px solid #d0d5dd',
-                          }}
-                          onMouseEnter={e => {
-                            (e.currentTarget as HTMLButtonElement).style.background = '#f7f8fa';
-                            (e.currentTarget as HTMLButtonElement).style.borderColor = '#32325d';
-                          }}
-                          onMouseLeave={e => {
-                            (e.currentTarget as HTMLButtonElement).style.background = '#ffffff';
-                            (e.currentTarget as HTMLButtonElement).style.borderColor = '#d0d5dd';
-                          }}
+
+                        {/* Site Widget card */}
+                        <div
+                          className="rounded-xl overflow-hidden"
+                          style={{ background: '#f7f8fa', border: '1px solid #e5e8ef' }}
                         >
-                          View My Creations
-                        </button>
+                          <div className="px-3.5 py-2.5">
+                            <h4 className="text-[13px] font-semibold" style={{ color: '#1a1a2e' }}>Site Widget</h4>
+                            <p className="text-[11px] mt-0.5" style={{ color: '#6b7280' }}>Display personalized suggestions to customers</p>
+                          </div>
+                          <div className="px-3.5 py-2" style={{ borderTop: '1px solid #e5e8ef', background: '#ffffff' }}>
+                            <button
+                              onClick={() => window.open(window.location.origin + '?preview=cart', '_blank')}
+                              className="w-full py-1.5 rounded-lg text-[12px] font-semibold text-white transition-colors"
+                              style={{ background: '#116dff' }}
+                              onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = '#0d5fdb')}
+                              onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = '#116dff')}
+                            >
+                              Preview cart page on your site
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Dashboard Page card */}
+                        <div
+                          className="rounded-xl overflow-hidden"
+                          style={{ background: '#f7f8fa', border: '1px solid #e5e8ef' }}
+                        >
+                          <div className="px-3.5 py-2.5">
+                            <h4 className="text-[13px] font-semibold" style={{ color: '#1a1a2e' }}>Dashboard Page</h4>
+                            <p className="text-[11px] mt-0.5" style={{ color: '#6b7280' }}>Manage and configure suggestion rules</p>
+                          </div>
+                          <div className="px-3.5 py-2" style={{ borderTop: '1px solid #e5e8ef', background: '#ffffff' }}>
+                            <button
+                              onClick={onNavigateToUpsellRules}
+                              className="w-full py-1.5 rounded-lg text-[12px] font-semibold text-white transition-colors"
+                              style={{ background: '#116dff' }}
+                              onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = '#0d5fdb')}
+                              onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = '#116dff')}
+                            >
+                              Keep editing
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      /* ── Stock analytics completion widget ── */
+                      <div
+                        className="mt-3 rounded-xl overflow-hidden fade-in-up"
+                        style={{
+                          background: '#f7f8fa',
+                          border: '1px solid #e5e8ef',
+                        }}
+                      >
+                        <div className="px-3.5 py-3">
+                          <p className="text-[13px] font-medium text-center" style={{ color: '#32325d' }}>
+                            Your{' '}
+                            <span
+                              onClick={onNavigateToDashboard}
+                              className="cursor-pointer"
+                              style={{ color: '#00b383', textDecoration: 'underline', textUnderlineOffset: 2 }}
+                              onMouseEnter={e => ((e.currentTarget as HTMLSpanElement).style.opacity = '0.8')}
+                              onMouseLeave={e => ((e.currentTarget as HTMLSpanElement).style.opacity = '1')}
+                            >
+                              custom dashboard page
+                            </span>{' '}
+                            is ready!
+                          </p>
+                          <p className="text-[11px] text-center mt-1" style={{ color: '#6b7280' }}>
+                            You can continue editing it in chat and manage it in your custom creations
+                          </p>
+                        </div>
+                        <div
+                          className="px-3.5 py-2"
+                          style={{ borderTop: '1px solid #e5e8ef', background: '#ffffff' }}
+                        >
+                          <button
+                            onClick={onGoToCreations}
+                            className="w-full py-1.5 rounded-lg text-[12px] font-semibold transition-colors"
+                            style={{
+                              color: '#32325d',
+                              background: '#ffffff',
+                              border: '1.5px solid #d0d5dd',
+                            }}
+                            onMouseEnter={e => {
+                              (e.currentTarget as HTMLButtonElement).style.background = '#f7f8fa';
+                              (e.currentTarget as HTMLButtonElement).style.borderColor = '#32325d';
+                            }}
+                            onMouseLeave={e => {
+                              (e.currentTarget as HTMLButtonElement).style.background = '#ffffff';
+                              (e.currentTarget as HTMLButtonElement).style.borderColor = '#d0d5dd';
+                            }}
+                          >
+                            View My Creations
+                          </button>
+                        </div>
+                      </div>
+                    )
                   )}
                 </div>
               </div>
