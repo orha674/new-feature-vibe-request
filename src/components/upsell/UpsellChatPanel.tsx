@@ -8,10 +8,10 @@ import type { RichSegment } from './RichStreamingResponse';
 import { UpsellAppCards } from './UpsellAppCards';
 
 const RESPONSE_TEXT =
-  'Here are tools to help you add smart product suggestions and upsells. Browse top-rated third-party apps below to compare features, or use AI to generate a custom app that fits exactly how you want to control recommendations and validations.';
+  'Here are tools to help you add smart product suggestions and upsells. Browse top-rated third-party apps below to compare features, or use AI to generate a custom capability that fits exactly how you want to control recommendations and validations.';
 
 const BLUEPRINT_SEGMENTS: RichSegment[] = [
-  { text: "I've drafted a blueprint for your custom Upsell App. Once approved, the system will generate a" },
+  { text: "I've drafted a blueprint for your custom Upsell Capability. Once approved, the system will generate a" },
   { text: 'customer-facing widget', bold: true },
   { text: 'for your storefront and a' },
   { text: 'dashboard page', bold: true },
@@ -361,7 +361,7 @@ export function UpsellChatPanel({ onNavigate }: UpsellChatPanelProps) {
         Hi, I'm your AI assistant
       </h3>
       <p className="text-sm" style={{ color: '#6b7280', maxWidth: 280 }}>
-        I can help you build custom apps, add features, and optimize your site. Tell me what you'd like to create.
+        I can help you build custom capabilities, add features, and optimize your site. Tell me what you'd like to create.
       </p>
     </div>
   );
