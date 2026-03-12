@@ -9,10 +9,15 @@ import AppDetailPanel from './components/AppDetailPanel';
 import ShareModal from './components/ShareModal';
 import WixTopBar from './components/WixTopBar';
 import WixSidebar from './components/WixSidebar';
+import { UpsellChatProvider, useUpsellChat } from './components/upsell/UpsellChatContext';
+import { UpsellChatPanel } from './components/upsell/UpsellChatPanel';
+import { UpsellBuildView } from './components/upsell/UpsellBuildView';
+import { UpsellRulesView } from './components/upsell/UpsellRulesView';
+import { UpsellPreviewPage } from './components/upsell/UpsellPreviewPage';
 
-type NavPage = 'home' | 'creations' | 'settings';
+type NavPage = 'home' | 'creations' | 'settings' | 'upsell-build' | 'upsell-rules';
 
-function App() {
+function AppInner() {
   const [currentPage, setCurrentPage] = useState<NavPage>('creations');
 
   // Extensions state
@@ -29,17 +34,28 @@ function App() {
   // Toasts
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  // Upsell chat
+  const { isUpsellPanelOpen, setIsUpsellPanelOpen } = useUpsellChat();
+
   const addToast = useCallback((message: string, type: Toast['type'] = 'success') => {
     const id = Math.random().toString(36).slice(2);
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
   }, []);
 
-  const handleNav = (page: NavPage) => {
-    setCurrentPage(page);
+  const handleNav = (page: string) => {
+    setCurrentPage(page as NavPage);
     setSelectedApp(null);
     setSelectedAsset(null);
   };
+
+  const handleUpsellNavigate = useCallback((page: string) => {
+    setCurrentPage(page as NavPage);
+  }, []);
+
+  const handleBuildComplete = useCallback(() => {
+    setCurrentPage('upsell-rules');
+  }, []);
 
   // ── App handlers ─────────────────────────────────────────────────────────
 
@@ -87,6 +103,20 @@ function App() {
   // ── Content renderer ──────────────────────────────────────────────────────
 
   const renderContent = () => {
+    // Upsell flow pages
+    if (currentPage === 'upsell-build') {
+      return (
+        <UpsellBuildView
+          onBack={() => setCurrentPage('creations')}
+          onBuildComplete={handleBuildComplete}
+        />
+      );
+    }
+
+    if (currentPage === 'upsell-rules') {
+      return <UpsellRulesView onBack={() => setCurrentPage('creations')} />;
+    }
+
     if (currentPage === 'creations') {
       // Drill level 3: extension detail (from app asset)
       if (selectedApp && selectedAsset) {
@@ -155,7 +185,10 @@ function App() {
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#f7f8fa' }}>
       {/* Top bar */}
-      <WixTopBar />
+      <WixTopBar
+        onAIClick={() => setIsUpsellPanelOpen(!isUpsellPanelOpen)}
+        isAIPanelOpen={isUpsellPanelOpen}
+      />
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
@@ -164,6 +197,11 @@ function App() {
 
         {/* Main */}
         <main className="flex-1 overflow-hidden">{renderContent()}</main>
+
+        {/* AI Chat Panel */}
+        {isUpsellPanelOpen && (
+          <UpsellChatPanel onNavigate={handleUpsellNavigate} />
+        )}
       </div>
 
       {/* Modals */}
@@ -186,6 +224,19 @@ function App() {
         onDismiss={id => setToasts(prev => prev.filter(t => t.id !== id))}
       />
     </div>
+  );
+}
+
+function App() {
+  // If opened with ?preview=cart, render the fullscreen preview page
+  if (new URLSearchParams(window.location.search).get('preview') === 'cart') {
+    return <UpsellPreviewPage />;
+  }
+
+  return (
+    <UpsellChatProvider>
+      <AppInner />
+    </UpsellChatProvider>
   );
 }
 

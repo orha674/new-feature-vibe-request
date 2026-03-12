@@ -84,3 +84,81 @@ pre code {
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace !important;
   font-size: 13px !important;
 }
+
+/* ── Upsell Skeleton Animations ─────────────────────────────────────────── */
+
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes skeleton-sparkle-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.6); }
+  50% { opacity: 0.85; transform: scale(1); }
+}
+
+@keyframes skeleton-pill-glow {
+  0%, 100% { box-shadow: 0 4px 20px rgba(59, 108, 245, 0.3); }
+  50% { box-shadow: 0 4px 32px rgba(59, 108, 245, 0.55), 0 0 48px rgba(123, 92, 245, 0.25); }
+}
+
+@keyframes skeleton-star-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes skeleton-bar-rise {
+  0% { transform: scaleY(0.3); opacity: 0.4; }
+  50% { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(0.3); opacity: 0.4; }
+}
+
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes widget-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.skeleton-bone {
+  position: relative;
+  overflow: hidden;
+  background-color: #e3e8ed;
+}
+.skeleton-bone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.45) 40%, rgba(255,255,255,0.45) 60%, transparent 100%);
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+.skeleton-sparkle {
+  animation: skeleton-sparkle-twinkle 2.4s ease-in-out infinite;
+}
+
+.skeleton-pill {
+  animation: skeleton-pill-glow 2s ease-in-out infinite;
+}
+
+.skeleton-star {
+  animation: skeleton-star-spin 3s linear infinite;
+}
+
+.skeleton-bar {
+  transform-origin: bottom;
+  animation: skeleton-bar-rise 2s ease-in-out infinite;
+}

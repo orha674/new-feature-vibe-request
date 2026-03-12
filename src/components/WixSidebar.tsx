@@ -24,8 +24,8 @@ import {
 type NavPage = 'home' | 'creations' | 'settings';
 
 interface Props {
-  currentPage: NavPage;
-  onNavigate: (page: NavPage) => void;
+  currentPage: string;
+  onNavigate: (page: string) => void;
 }
 
 interface NavItemDef {
