@@ -82,10 +82,10 @@ const MyCreationsView: React.FC<Props> = ({
           <div className="flex items-start justify-between mb-5">
             <div>
               <h1 className="text-2xl font-bold" style={{ color: '#16161d' }}>
-                My Creations
+                Custom Creations
               </h1>
               <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
-                Custom tools you've built for your site
+                Capabilities and bundles you've built for your site
               </p>
             </div>
             <button
@@ -100,7 +100,7 @@ const MyCreationsView: React.FC<Props> = ({
               }
             >
               <Plus size={15} />
-              New Creation
+              New Capability
             </button>
           </div>
 
@@ -114,7 +114,7 @@ const MyCreationsView: React.FC<Props> = ({
               />
               <input
                 type="text"
-                placeholder="Search Creation…"
+                placeholder="Search creations…"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 rounded-lg text-sm outline-none transition-colors"
@@ -242,7 +242,7 @@ const MyCreationsView: React.FC<Props> = ({
               }
             >
               <Plus size={15} />
-              New Creation
+              New Capability
             </button>
           </div>
         ) : filtered.length === 0 ? (
@@ -259,7 +259,7 @@ const MyCreationsView: React.FC<Props> = ({
             <p className="text-xs mt-1" style={{ color: '#9098a9' }}>
               {query || statusFilter !== 'all'
                 ? 'Try adjusting your search or filters'
-                : 'Create your first app to get started'}
+                : 'Create your first custom capability to get started'}
             </p>
           </div>
         ) : (

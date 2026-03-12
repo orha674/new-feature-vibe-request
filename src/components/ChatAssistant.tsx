@@ -19,6 +19,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { BuildingModeState } from '../App';
+import { UpsellAppCards } from './upsell/UpsellAppCards';
 
 interface RadioOption {
   id: string;
@@ -45,6 +46,7 @@ interface Message {
   content: string;
   widget?: Widget;
   appMarketCards?: AppMarketCard[];
+  showUpsellCards?: boolean;
 }
 
 const SUGGESTIONS = [
@@ -81,9 +83,11 @@ interface ChatAssistantProps {
   onShowEmptyCreations?: () => void;
   prefillInput?: string;
   onPrefillConsumed?: () => void;
+  onNavigateToUpsellBuild?: () => void;
+  onNavigateToUpsellRules?: () => void;
 }
 
-const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, generateAppMode, onExitGenerateApp, onEnterGenerateApp, editAppMode, onExitEditApp, buildingMode, onStartBuilding, onBuildComplete, onNavigateToDashboard, onGoToCreations, onShowEmptyCreations, prefillInput, onPrefillConsumed }) => {
+const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, generateAppMode, onExitGenerateApp, onEnterGenerateApp, editAppMode, onExitEditApp, buildingMode, onStartBuilding, onBuildComplete, onNavigateToDashboard, onGoToCreations, onShowEmptyCreations, prefillInput, onPrefillConsumed, onNavigateToUpsellBuild, onNavigateToUpsellRules }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -224,26 +228,13 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
   const getReply = (text: string): Message => {
     const lower = text.toLowerCase();
 
-    // Upsell / Bundle flow
+    // Upsell / Bundle flow — show app suggestion cards
     if (lower.includes('upsell') || lower.includes('cross-sell') || lower.includes('cross sell') || lower.includes('bundle') || lower.includes('appsell') || lower.includes('app sell')) {
       return {
         id: Math.random().toString(36).slice(2),
         role: 'assistant',
-        content: 'Great idea! I can help you set up product upsells and bundles.',
-        widget: {
-          question: 'How would you like to add upsell & bundle features?',
-          options: [
-            {
-              id: 'existing-pages',
-              label: 'Add upsell & bundle suggestions to existing product pages',
-            },
-            {
-              id: 'new-bundle-page',
-              label: 'Build a new Smart Bundle Creator page with cross-sell recommendations',
-            },
-          ],
-          appName: 'Smart Product Bundles',
-        },
+        content: 'Here are tools to help you add smart product suggestions and upsells. Browse top-rated third-party apps below to compare features, or use AI to generate a custom capability that fits exactly how you want to control recommendations and validations.',
+        showUpsellCards: true,
       };
     }
 
@@ -668,6 +659,11 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen = true, onClose, g
                   </div>
                   {msg.role === 'assistant' && renderWidget(msg)}
                   {msg.role === 'assistant' && renderAppMarketWidget(msg)}
+                  {msg.role === 'assistant' && msg.showUpsellCards && (
+                    <div className="mt-3">
+                      <UpsellAppCards onCreateWithAI={() => onNavigateToUpsellBuild?.()} />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

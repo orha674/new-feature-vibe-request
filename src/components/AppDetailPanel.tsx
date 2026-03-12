@@ -250,7 +250,7 @@ const AppDetailPanel: React.FC<Props> = ({
             onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.color = '#9098a9')}
           >
             <ArrowLeft size={13} />
-            My Creations
+            Custom Creations
           </button>
 
           <div className="w-px h-4 flex-shrink-0" style={{ background: '#e5e8ef' }} />

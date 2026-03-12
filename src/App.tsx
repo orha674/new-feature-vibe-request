@@ -12,8 +12,13 @@ import WixSidebar from './components/WixSidebar';
 import ChatAssistant from './components/ChatAssistant';
 import BuildingDashboardPage from './components/BuildingDashboardPage';
 import HomePage from './components/HomePage';
+import WixHomePage from './components/WixHomePage';
+import { UpsellChatProvider } from './components/upsell/UpsellChatContext';
+import { UpsellBuildView } from './components/upsell/UpsellBuildView';
+import { UpsellRulesView } from './components/upsell/UpsellRulesView';
+import { UpsellPreviewPage } from './components/upsell/UpsellPreviewPage';
 
-type NavPage = 'home' | 'creations' | 'settings';
+type NavPage = 'home' | 'creations' | 'settings' | 'upsell-build' | 'upsell-rules';
 
 export interface BuildingModeState {
   active: boolean;
@@ -22,8 +27,8 @@ export interface BuildingModeState {
   freshlyBuilt: boolean;
 }
 
-function App() {
-  const [currentPage, setCurrentPage] = useState<NavPage>('creations');
+function AppInner() {
+  const [currentPage, setCurrentPage] = useState<NavPage>('home');
 
   // Extensions state
   const [extensions, setExtensions] = useState<Extension[]>(MOCK_EXTENSIONS);
@@ -51,12 +56,14 @@ function App() {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
   }, []);
 
-  const handleNav = (page: NavPage) => {
-    setCurrentPage(page);
+  const handleNav = (page: string) => {
+    setCurrentPage(page as NavPage);
     setSelectedApp(null);
     setSelectedAsset(null);
     setBuildingMode(null);
   };
+
+  // ── ChatAssistant build handlers ──────────────────────────────────────────
 
   const handleStartBuilding = useCallback((selectedOptionLabel: string, appName?: string) => {
     setBuildingMode({
@@ -67,7 +74,7 @@ function App() {
     });
   }, []);
 
-  const handleBuildComplete = useCallback(() => {
+  const handleChatBuildComplete = useCallback(() => {
     setBuildingMode(prev => prev ? { ...prev, completed: true, freshlyBuilt: true } : prev);
 
     // Add the new creation to My Creations (only if not already there)
@@ -131,6 +138,16 @@ function App() {
     setIsChatOpen(true);
   }, []);
 
+  // ── Upsell flow handlers ────────────────────────────────────────────────
+
+  const handleUpsellNavigate = useCallback((page: string) => {
+    setCurrentPage(page as NavPage);
+  }, []);
+
+  const handleUpsellBuildComplete = useCallback(() => {
+    setCurrentPage('upsell-rules');
+  }, []);
+
   // ── App handlers ─────────────────────────────────────────────────────────
 
   const handleRollback = useCallback(
@@ -177,9 +194,23 @@ function App() {
   // ── Content renderer ──────────────────────────────────────────────────────
 
   const renderContent = () => {
-    // Building mode: show skeleton dashboard
+    // Building mode: show skeleton dashboard (from ChatAssistant flow)
     if (buildingMode?.active) {
       return <BuildingDashboardPage appName={buildingMode.appName} completed={buildingMode.completed} freshlyBuilt={buildingMode.freshlyBuilt} />;
+    }
+
+    // Upsell flow pages
+    if (currentPage === 'upsell-build') {
+      return (
+        <UpsellBuildView
+          onBack={() => setCurrentPage('creations')}
+          onBuildComplete={handleUpsellBuildComplete}
+        />
+      );
+    }
+
+    if (currentPage === 'upsell-rules') {
+      return <UpsellRulesView onBack={() => setCurrentPage('creations')} />;
     }
 
     if (currentPage === 'creations') {
@@ -238,7 +269,7 @@ function App() {
     }
 
     if (currentPage === 'home') {
-      return <HomePage />;
+      return <WixHomePage onNavigate={handleNav} />;
     }
 
     // Placeholder pages
@@ -247,9 +278,7 @@ function App() {
         className="flex flex-col items-center justify-center h-full gap-3"
         style={{ background: '#f7f8fa' }}
       >
-        <p className="text-sm font-medium" style={{ color: '#32325d' }}>
-          Settings
-        </p>
+        <p className="text-sm font-medium" style={{ color: '#32325d' }}>Settings</p>
         <p className="text-xs" style={{ color: '#9098a9' }}>Coming soon</p>
       </div>
     );
@@ -258,7 +287,10 @@ function App() {
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#f7f8fa' }}>
       {/* Top bar */}
-      <WixTopBar onToggleChat={() => setIsChatOpen(prev => !prev)} />
+      <WixTopBar
+        onToggleChat={() => setIsChatOpen(prev => !prev)}
+        isChatOpen={isChatOpen}
+      />
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
@@ -268,7 +300,7 @@ function App() {
         {/* Main */}
         <main className="flex-1 overflow-hidden">{renderContent()}</main>
 
-        {/* Chat Assistant */}
+        {/* Aria Chat — single unified chat for all flows */}
         <ChatAssistant
           isOpen={isChatOpen}
           onClose={() => setIsChatOpen(false)}
@@ -279,12 +311,14 @@ function App() {
           onExitEditApp={() => setEditAppMode(null)}
           buildingMode={buildingMode}
           onStartBuilding={handleStartBuilding}
-          onBuildComplete={handleBuildComplete}
+          onBuildComplete={handleChatBuildComplete}
           onNavigateToDashboard={handleNavigateToDashboard}
           onGoToCreations={() => handleNav('creations')}
           onShowEmptyCreations={handleShowEmptyCreations}
           prefillInput={prefillChatInput}
           onPrefillConsumed={() => setPrefillChatInput('')}
+          onNavigateToUpsellBuild={() => setCurrentPage('upsell-build')}
+          onNavigateToUpsellRules={() => setCurrentPage('upsell-rules')}
         />
       </div>
 
@@ -308,6 +342,19 @@ function App() {
         onDismiss={id => setToasts(prev => prev.filter(t => t.id !== id))}
       />
     </div>
+  );
+}
+
+function App() {
+  // If opened with ?preview=cart, render the fullscreen preview page
+  if (new URLSearchParams(window.location.search).get('preview') === 'cart') {
+    return <UpsellPreviewPage />;
+  }
+
+  return (
+    <UpsellChatProvider>
+      <AppInner />
+    </UpsellChatProvider>
   );
 }
 
